@@ -1,0 +1,55 @@
+:root {
+  /* Layered depth — bg → bg-2 → panel → panel-elevated */
+  --bg:              #07090f;
+  --bg-2:            #0a0d14;
+  --panel:           #101725;
+  --panel-2:         #161e2e;
+  --panel-elevated:  #1c2538;
+  --border:          #232b3d;
+  --border-strong:   #2c3650;
+  --text:            #e6edf7;
+  --muted:           #8a93a6;
+  --muted-2:         #5b6477;
+
+  --eth:  #627eea;
+  --avax: #e84142;
+  --btc:  #f7931a;
+
+  --accent-admin:     #4f8eff;
+  --accent-developer: #25c08a;
+  --accent-billing:   #f59e3a;
+  --accent-viewer:    #8a93a6;
+  --accent: var(--accent-admin);
+
+  --green: #25c08a;
+  --amber: #f59e3a;
+  --red:   #ef4444;
+
+  --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Shadows / elevation */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset;
+
+  /* Card hairline highlight */
+  --card-highlight: 0 1px 0 rgba(255,255,255,0.03) inset;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 150ms;
+  --t-med:  200ms;
+  --t-slow: 400ms;
+}
+
+[data-role='developer'] { --accent: var(--accent-developer); }
+[data-role='billing']   { --accent: var(--accent-billing); }
+[data-role='viewer']    { --accent: var(--accent-viewer); }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
