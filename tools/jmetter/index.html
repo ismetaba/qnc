@@ -133,18 +133,19 @@
   .chip.s2{color:var(--green);} .chip.s4,.chip.s5{color:var(--red);} .chip.net{color:var(--amber);}
 
   /* response stream dock */
-  .dock{position:fixed;left:0;right:0;bottom:0;height:216px;z-index:25;display:flex;flex-direction:column;border-top:1px solid var(--line2);border-radius:14px 14px 0 0;transform:translateY(calc(100% - 38px));transition:transform .26s cubic-bezier(.4,0,.2,1);}
+  .dock{position:fixed;left:0;right:0;bottom:0;height:216px;z-index:25;display:flex;flex-direction:column;border-top:1px solid var(--line2);border-radius:14px 14px 0 0;transform:translateY(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);}
   body.dock-open .dock{transform:none;}
-  .dock-head{display:flex;align-items:center;gap:12px;padding:0 16px;height:38px;flex-shrink:0;border-bottom:1px solid var(--line);cursor:pointer;}
-  .dh-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:8px;}
+  .dock-head{display:flex;align-items:center;gap:12px;padding:0 12px 0 18px;height:40px;flex-shrink:0;border-bottom:1px solid var(--line);cursor:pointer;background:rgba(255,255,255,.02);border-radius:14px 14px 0 0;}
+  .dh-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:8px;white-space:nowrap;}
   .dh-count{font-family:var(--mono);font-size:10px;color:var(--flow);background:rgba(91,140,255,.12);border-radius:999px;padding:1px 8px;}
-  .dh-filter{width:200px;margin-left:auto;background:var(--node2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:10px;}
-  .dh-x{background:transparent;border:none;color:var(--dim);font-size:14px;cursor:pointer;padding:4px;transition:transform .2s;}
-  body.dock-open .dh-x{transform:rotate(180deg);}
+  .dh-filter{width:220px;margin-left:auto;background:var(--node2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:10px;color:var(--txt);}
+  .dh-filter:focus{border-color:var(--flow);}
+  .dh-x{display:grid;place-items:center;width:26px;height:26px;background:transparent;border:1px solid var(--line);border-radius:7px;color:var(--dim);font-size:11px;cursor:pointer;flex-shrink:0;}
+  .dh-x:hover{color:var(--txt);border-color:var(--line2);}
   .dock-body{flex:1;overflow-y:auto;min-height:0;}
   .dock-empty{padding:26px;text-align:center;color:var(--faint);font-size:12px;}
-  .sr{display:grid;grid-template-columns:70px 44px 56px 1fr;gap:12px;padding:7px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;cursor:pointer;align-items:baseline;white-space:nowrap;overflow:hidden;transition:background .12s;}
-  .sr:hover{background:rgba(255,255,255,.04);}
+  .sr{display:grid;grid-template-columns:76px 52px 60px 1fr;gap:14px;padding:8px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;cursor:pointer;align-items:baseline;white-space:nowrap;overflow:hidden;border-left:2px solid transparent;transition:background .12s,border-color .12s;}
+  .sr:hover{background:rgba(255,255,255,.04);border-left-color:var(--flow);}
   .sr.hide{display:none;}
   .sr .sr-ts{color:var(--faint);} .sr .sr-id{color:var(--dim);} .sr .sr-co{font-weight:600;}
   .sr .sr-co.s2{color:var(--green);} .sr .sr-co.s4,.sr .sr-co.s5{color:var(--red);} .sr .sr-co.net{color:var(--amber);}
@@ -760,7 +761,8 @@
     const nodes=[...world.querySelectorAll('.node')]; let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
     nodes.forEach(n=>{const x=parseFloat(n.style.left),y=parseFloat(n.style.top),w=n.offsetWidth,h=n.offsetHeight; minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x+w);maxY=Math.max(maxY,y+h);});
     const cw=maxX-minX,ch=maxY-minY,vw=viewport.clientWidth,vh=viewport.clientHeight;
-    const padL=24,padT=24,padR=vw>720?282:24,padB=24,availW=vw-padL-padR,availH=vh-padT-padB;
+    const dockH=document.body.classList.contains('dock-open')?216:0;
+    const padL=24,padT=24,padR=vw>720?282:24,padB=24+dockH,availW=vw-padL-padR,availH=vh-padT-padB;
     zoom=Math.max(0.55,Math.min(1.15,Math.min(availW/cw,availH/ch)));
     pan.x=padL+(availW-cw*zoom)/2-minX*zoom; pan.y=padT+(availH-ch*zoom)/2-minY*zoom; applyView();
   }
