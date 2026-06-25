@@ -3,360 +3,346 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="color-scheme" content="light" />
-<title>Jmetter // Custody TX Load Tester</title>
+<meta name="color-scheme" content="dark" />
+<title>Jmetter // Flow Topology</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#f5f4f1;--card:#fbfaf8;--ink:#16150f;--ink2:#4a4942;--dim:#8c8a80;--faint:#b8b6ab;
-    --rule:#e2e0d8;--rule2:#d2d0c6;--red:#e23b1f;--ok:#1f7a3d;--warn:#c47b14;
+    --bg:#080b14;--node:#121826;--node2:#171f2f;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.16);
+    --txt:#eaf0fb;--dim:#8d99af;--faint:#535f76;
+    --flow:#5b8cff;--client:#38e0ff;--server:#a98bff;--green:#36e8a0;--red:#ff6478;--amber:#ffc24b;--cyan:#38e0ff;
     --sans:"Space Grotesk",-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
-    --ch-grid:#eae8e0;--ch-axis:#a8a69c;--ch-rps:#16150f;--ch-lat:#e23b1f;
-    --ch-p50:#9a988e;--ch-p95:#c47b14;--ch-p99:#e23b1f;--ch-ok:#1f7a3d;--ch-warn:#c47b14;--ch-err:#e23b1f;--ch-fill:rgba(20,21,15,.05);
   }
   *{box-sizing:border-box;}
   html,body{height:100%;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden;-webkit-font-smoothing:antialiased;}
-  ::selection{background:var(--ink);color:var(--paper);}
-  ::-webkit-scrollbar{width:10px;height:10px;}::-webkit-scrollbar-thumb{background:var(--rule2);}::-webkit-scrollbar-track{background:transparent;}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:13px;overflow:hidden;-webkit-font-smoothing:antialiased;}
+  ::selection{background:rgba(91,140,255,.3);}
+  ::-webkit-scrollbar{width:9px;height:9px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:5px;}::-webkit-scrollbar-track{background:transparent;}
   button,input,select,textarea{font-family:inherit;}
-  code{font-family:var(--mono);font-size:.9em;color:var(--ink2);}
-  .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;}
+  code{font-family:var(--mono);color:var(--dim);}
+  .glass{background:rgba(16,22,36,.82);border:1px solid var(--line);backdrop-filter:blur(16px);box-shadow:0 14px 44px rgba(0,0,0,.5);}
 
-  /* masthead */
-  .mast{display:grid;grid-template-columns:1fr auto;align-items:end;padding:20px 34px 15px;border-bottom:2px solid var(--ink);}
-  .mast h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-2px;line-height:.9;}
-  .mast .meta{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:8px;display:flex;gap:18px;flex-wrap:wrap;}
-  .mast .meta b{color:var(--ink2);}
-  .mast .right{display:flex;flex-direction:column;align-items:flex-end;gap:9px;}
-  .mast-actions{display:flex;gap:8px;}
-  .mbtn{font-family:var(--sans);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--dim);background:transparent;border:1px solid var(--rule2);padding:6px 11px;cursor:pointer;transition:all .15s;border-radius:0;}
-  .mbtn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .mbtn .bdg{margin-left:6px;color:var(--red);font-weight:700;}
-  .mbtn:hover .bdg{color:var(--paper);}
-  .status{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--dim);}
-  .status .d{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--faint);}
-  body.running .status{color:var(--ok);} body.running .status .d{background:var(--ok);border-color:var(--ok);animation:pp 1.2s infinite;}
-  body.state-err .status{color:var(--red);} body.state-err .status .d{background:var(--red);border-color:var(--red);}
-  body.state-done .status{color:var(--ink);} body.state-done .status .d{background:var(--ink);border-color:var(--ink);}
+  /* top bar */
+  .top{position:fixed;top:0;left:0;right:0;height:54px;z-index:30;display:flex;align-items:center;gap:14px;padding:0 18px;background:rgba(8,11,20,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:center;gap:11px;}
+  .brand .o{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 30deg,var(--client),var(--server),var(--green),var(--client));display:grid;place-items:center;}
+  .brand .o::after{content:"";width:18px;height:18px;border-radius:5px;background:#0a0e18;}
+  .brand b{font-weight:700;font-size:15px;} .brand .v{color:var(--faint);font-size:11px;}
+  .top .grow{flex:1;}
+  .top .read{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:30vw;}
+  .tbtns{display:flex;gap:7px;}
+  .tbtn{font-family:var(--mono);font-size:11px;color:var(--dim);background:rgba(16,22,36,.6);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .tbtn:hover{color:var(--txt);border-color:var(--line2);}
+  .tbtn.on{color:var(--txt);border-color:var(--flow);background:rgba(91,140,255,.14);}
+  .tbtn .bdg{color:var(--flow);font-weight:700;margin-left:5px;}
+  .tbtn.vw{color:var(--amber);border-color:rgba(255,194,75,.4);}
+  .st{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--dim);padding:6px 13px;border-radius:999px;border:1px solid var(--line);}
+  .st .d{width:8px;height:8px;border-radius:50%;background:var(--faint);}
+  body.running .st{color:var(--green);border-color:rgba(54,232,160,.4);} body.running .st .d{background:var(--green);box-shadow:0 0 10px var(--green);animation:pp 1s infinite;}
+  body.state-err .st{color:var(--red);} body.state-err .st .d{background:var(--red);}
+  body.viewing .st{color:var(--amber);border-color:rgba(255,194,75,.4);} body.viewing .st .d{background:var(--amber);}
   @keyframes pp{50%{opacity:.3}}
-  .clock{font-family:var(--mono);font-size:12px;color:var(--dim);}
 
-  .grid{display:grid;grid-template-columns:320px 1fr;min-height:0;overflow:hidden;}
-  .side{border-right:1px solid var(--rule);overflow-y:auto;padding:24px 28px;}
-  .knum{font-size:11px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
-  .knum::after{content:"";flex:1;height:1px;background:var(--rule);}
-  .sec{margin-bottom:28px;}
-  .sec h3{font-size:18px;font-weight:600;letter-spacing:-.4px;margin:0 0 14px;}
-  label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:0 0 5px;}
-  label .opt{color:var(--faint);letter-spacing:.5px;text-transform:none;}
-  .fld{margin-bottom:16px;}
-  input,select,textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--rule2);color:var(--ink);padding:6px 0;font-family:var(--mono);font-size:13px;outline:none;border-radius:0;transition:border-color .2s;}
-  input:focus,select:focus,textarea:focus{border-bottom-color:var(--ink);}
-  input::placeholder,textarea::placeholder{color:var(--faint);}
-  input.bad{border-bottom-color:var(--red);}
-  select{cursor:pointer;appearance:none;}
-  textarea{resize:vertical;min-height:108px;line-height:1.6;font-size:12px;border:1px solid var(--rule2);padding:10px;}
-  textarea:focus{border-color:var(--ink);border-bottom-color:var(--ink);}
-  textarea.bad{border-color:var(--red);}
-  textarea.jwt{min-height:64px;font-size:11px;}
-  textarea.head{min-height:54px;}
-  .hint{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5;} .hint.bad{color:var(--red);}
-  .url-row{display:grid;grid-template-columns:78px 1fr;gap:12px;}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  .presets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
-  .pre{border:1px solid var(--rule2);padding:11px 12px;cursor:pointer;transition:all .15s;user-select:none;}
-  .pre:hover{border-color:var(--ink2);} .pre.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .pre .n{font-weight:600;font-size:14px;} .pre .d{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px;} .pre.on .d{color:var(--faint);}
+  /* workspace */
+  .viewport{position:fixed;inset:54px 0 0 0;overflow:hidden;cursor:grab;z-index:1;
+    background-image:radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1px);background-size:28px 28px;}
+  .viewport.panning{cursor:grabbing;}
+  #fx{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+  .world{position:absolute;left:0;top:0;width:1px;height:1px;transform-origin:0 0;z-index:2;}
 
-  .jwt-info{margin-top:10px;border:1px solid var(--rule2);padding:9px 11px;font-size:12px;display:none;}
+  .node{position:absolute;background:var(--node);border:1px solid var(--line);border-radius:13px;box-shadow:0 12px 32px rgba(0,0,0,.42);width:236px;}
+  .node.wide{width:286px;}
+  .nhead{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--line);cursor:grab;border-radius:13px 13px 0 0;}
+  .nhead:active{cursor:grabbing;}
+  .nhead .ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#0a0e18;font-weight:800;font-size:12px;flex-shrink:0;}
+  .nhead .ttl{font-weight:600;font-size:13px;} .nhead .sub{font-size:9px;color:var(--faint);margin-left:auto;letter-spacing:1px;text-transform:uppercase;}
+  .nbody{padding:12px 13px;}
+  label{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin:0 0 4px;}
+  label .opt{text-transform:none;letter-spacing:0;color:var(--faint);}
+  .fld{margin-bottom:9px;} .fld:last-child{margin-bottom:0;}
+  input,select,textarea{width:100%;background:var(--node2);border:1px solid var(--line);color:var(--txt);padding:7px 9px;border-radius:7px;font-family:var(--mono);font-size:11px;outline:none;transition:border-color .15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--flow);}
+  input.bad,textarea.bad{border-color:var(--red);}
+  select{appearance:none;cursor:pointer;}
+  textarea{resize:vertical;min-height:78px;line-height:1.45;}
+  textarea.jwt{min-height:46px;}
+  .payHint{font-size:10px;color:var(--faint);margin-top:4px;} .payHint.bad{color:var(--red);}
+  .jwt-info{margin-top:7px;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:10px;display:none;background:var(--node2);}
   .jwt-info.show{display:block;}
-  .jwt-info.ok{border-color:var(--ok);} .jwt-info.warn{border-color:var(--warn);} .jwt-info.err{border-color:var(--red);}
-  .jwt-info .who{font-weight:600;}
-  .jwt-info .jmeta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;word-break:break-all;}
+  .jwt-info.ok{border-color:rgba(54,232,160,.4);} .jwt-info.warn{border-color:rgba(255,194,75,.4);} .jwt-info.err{border-color:rgba(255,100,120,.4);}
+  .jwt-info .who{font-weight:600;font-size:11px;color:var(--txt);}
+  .jwt-info .jmeta{font-family:var(--mono);color:var(--dim);margin-top:3px;word-break:break-all;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;} .url-row{display:grid;grid-template-columns:60px 1fr;gap:6px;}
+  .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+  .pre{border:1px solid var(--line);background:var(--node2);border-radius:6px;padding:6px 2px;text-align:center;cursor:pointer;transition:all .15s;user-select:none;}
+  .pre:hover{border-color:var(--line2);} .pre.on{border-color:var(--flow);background:rgba(91,140,255,.14);}
+  .pre .n{font-size:10px;font-weight:700;} .pre .d{font-size:8px;color:var(--faint);}
 
-  .btns{display:flex;flex-direction:column;gap:9px;margin-top:4px;}
-  button{padding:13px 16px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:13px;letter-spacing:.5px;cursor:pointer;transition:all .15s;border-radius:0;}
-  button:hover:not(:disabled){background:var(--ink);color:var(--paper);} button:disabled{opacity:.3;cursor:not-allowed;}
-  button.go{background:var(--ink);color:var(--paper);} button.go:hover:not(:disabled){background:var(--red);border-color:var(--red);}
-  button.kill{border-color:var(--red);color:var(--red);} button.kill:hover:not(:disabled){background:var(--red);color:var(--paper);}
-  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-  .curl{padding:9px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--rule2);color:var(--dim);background:transparent;}
-  .curl:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .ic.t{background:var(--cyan);} .ic.a{background:var(--server);} .ic.p{background:var(--amber);} .ic.e{background:linear-gradient(135deg,var(--flow),var(--server));color:#fff;}
 
-  /* main */
-  .main{display:grid;grid-template-rows:auto auto auto 1fr;min-height:0;overflow:hidden;}
-  .view-banner{display:none;align-items:center;justify-content:space-between;gap:14px;padding:10px 28px;background:var(--ink);color:var(--paper);font-size:12px;letter-spacing:.4px;}
-  .view-banner.show{display:flex;}
-  .view-banner b{font-weight:600;}
-  .view-banner button{background:transparent;border:1px solid var(--paper);color:var(--paper);padding:5px 11px;font-size:10px;letter-spacing:1px;text-transform:uppercase;}
-  .view-banner button:hover{background:var(--paper);color:var(--ink);}
-  .kpis{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--rule);}
-  .kpi{padding:16px 22px;border-right:1px solid var(--rule);min-width:0;}
-  .kpi:last-child{border-right:none;}
-  .kpi .k{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:11px;}
-  .kpi .v{font-size:32px;font-weight:600;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .kpi .u{font-size:14px;color:var(--dim);font-weight:400;}
-  .kpi.red .v{color:var(--red);} .kpi.ok .v{color:var(--ok);}
-  .prog{display:flex;align-items:center;gap:22px;padding:13px 28px;border-bottom:1px solid var(--rule);}
-  .prog .pl{font-size:13px;font-weight:600;white-space:nowrap;}
-  .prog .track{flex:1;height:2px;background:var(--rule2);position:relative;}
-  .prog .fill{position:absolute;top:-1px;bottom:-1px;left:0;width:0;background:var(--ink);transition:width .35s;}
-  body.state-err .prog .fill{background:var(--red);}
-  .prog .m{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;} .prog .m b{color:var(--ink);}
+  /* engine node */
+  .engine .runbtns{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:11px;}
+  button.run{background:linear-gradient(120deg,var(--flow),var(--server));border:none;color:#fff;font-weight:700;font-size:13px;padding:11px;border-radius:8px;cursor:pointer;box-shadow:0 4px 16px rgba(91,140,255,.4);transition:all .15s;}
+  button.run:hover:not(:disabled){transform:translateY(-1px);} button.run:disabled{opacity:.45;cursor:not-allowed;}
+  button.stop{background:transparent;border:1px solid rgba(255,100,120,.4);color:var(--red);font-weight:600;padding:11px 13px;border-radius:8px;cursor:pointer;} button.stop:disabled{opacity:.35;cursor:not-allowed;}
+  .subbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  button.ghost{background:var(--node2);border:1px solid var(--line);color:var(--dim);font-weight:600;font-size:11px;padding:8px;border-radius:7px;cursor:pointer;transition:all .15s;}
+  button.ghost:hover{color:var(--txt);border-color:var(--line2);}
+  .progrow{display:flex;align-items:center;gap:9px;margin-top:11px;}
+  .progrow .track{flex:1;height:5px;background:var(--node2);border-radius:3px;overflow:hidden;}
+  .progrow .fill{height:100%;width:0;background:linear-gradient(90deg,var(--flow),var(--server));border-radius:3px;transition:width .3s;}
+  body.state-err .progrow .fill{background:linear-gradient(90deg,var(--red),var(--amber));}
+  .progrow .pc{font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;}
 
-  .low{display:grid;grid-template-columns:1.5fr 1fr;min-height:0;overflow:hidden;}
-  .panel{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule);}
-  .panel:last-child{border-right:none;}
-  .tabs{display:flex;gap:22px;padding:0 24px;height:50px;align-items:center;border-bottom:1px solid var(--rule);}
-  .tab{font-size:13px;font-weight:500;color:var(--dim);cursor:pointer;padding:6px 0;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:inline-flex;gap:8px;align-items:center;user-select:none;}
-  .tab:hover{color:var(--ink);} .tab.on{color:var(--ink);border-bottom-color:var(--red);}
-  .tab .c{font-family:var(--mono);font-size:11px;color:var(--dim);}
-  .tab.on .c{color:var(--red);}
-  .codes{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;}
-  .chip{font-family:var(--mono);font-size:11px;padding:2px 8px;border:1px solid var(--rule2);color:var(--dim);white-space:nowrap;}
-  .chip.s2{color:var(--ok);border-color:var(--ok);} .chip.s4,.chip.s5{color:var(--red);border-color:var(--red);} .chip.net{color:var(--warn);border-color:var(--warn);}
-  .pb{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;}
-  .vp{display:none;flex:1;min-height:0;flex-direction:column;} .vp.on{display:flex;}
-  .legend{display:flex;gap:22px;padding:12px 24px;font-size:11px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;}
-  .legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:7px;}
-  .cw{flex:1;position:relative;padding:14px 20px;min-height:0;} canvas{width:100%;height:100%;display:block;}
+  /* topology nodes (client/server) */
+  .tnode{width:150px;text-align:center;}
+  .tnode .ring{width:64px;height:64px;margin:0 auto;border-radius:50%;display:grid;place-items:center;position:relative;border:1.5px solid var(--accent);
+    background:radial-gradient(circle at 50% 32%,rgba(56,224,255,.24),rgba(56,224,255,.04) 72%);
+    box-shadow:0 0 0 4px rgba(56,224,255,.06),0 8px 22px rgba(0,0,0,.45),inset 0 0 16px rgba(56,224,255,.14);}
+  .tnode.srv .ring{background:radial-gradient(circle at 50% 32%,rgba(169,139,255,.26),rgba(169,139,255,.04) 72%);
+    box-shadow:0 0 0 4px rgba(169,139,255,.06),0 8px 22px rgba(0,0,0,.45),inset 0 0 16px rgba(169,139,255,.14);}
+  .tnode .ring::before{content:"";position:absolute;inset:-7px;border-radius:50%;border:1px dashed rgba(255,255,255,.16);animation:orbit 16s linear infinite;}
+  body.running .tnode .ring::before{border-color:var(--accent);opacity:.55;}
+  @keyframes orbit{to{transform:rotate(360deg)}}
+  .tnode .ring svg{width:28px;height:28px;color:var(--accent);}
+  .tnode .count{margin-top:8px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);background:rgba(56,224,255,.1);border:1px solid var(--line);border-radius:999px;padding:3px 11px;display:inline-flex;align-items:center;gap:5px;transition:transform .12s;}
+  .tnode.srv .count{color:var(--server);background:rgba(169,139,255,.1);}
+  .tnode .count b{color:var(--txt);font-weight:700;}
+  .tnode .count.bump{transform:scale(1.13);}
+  .tnode{cursor:grab;} .tnode:active{cursor:grabbing;} .tnode *{cursor:inherit;}
+  .tnode .ttl{font-weight:700;font-size:14px;margin-top:10px;}
+  .tnode .sub{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:2px;}
+  .tnode{--accent:var(--client);}
+  .tnode.srv{--accent:var(--server);}
 
-  .resp-tools{padding:9px 20px;border-bottom:1px solid var(--rule);}
-  .resp-tools input{border:1px solid var(--rule2);padding:7px 11px;font-size:12px;}
-  .resp-tools input:focus{border-color:var(--ink);}
-  .log{flex:1;overflow-y:auto;min-height:0;}
-  .lg{display:grid;grid-template-columns:74px 46px 50px 1fr;gap:12px;padding:9px 24px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:12px;align-items:baseline;white-space:nowrap;overflow:hidden;cursor:pointer;transition:background .12s;}
-  .lg:hover{background:var(--card);}
-  .lg.hide{display:none;}
-  .lg .lg-ts{color:var(--faint);} .lg .lg-id{color:var(--dim);} .lg .lg-co{font-weight:500;}
-  .lg .lg-co.s2{color:var(--ok);} .lg .lg-co.s4,.lg .lg-co.s5{color:var(--red);} .lg .lg-co.net{color:var(--warn);}
-  .lg .lg-m{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;}
+  /* HUD */
+  .hud{position:fixed;z-index:20;top:68px;right:16px;width:248px;display:grid;gap:10px;}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .stat{border-radius:11px;padding:9px 10px;}
+  .stat .k{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);}
+  .stat .v{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:4px;line-height:1;}
+  .stat .u{font-size:9px;color:var(--faint);}
+  .stat.green .v{color:var(--green);} .stat.red .v{color:var(--red);} .stat.cy .v{color:var(--cyan);} .stat.vi .v{color:var(--server);} .stat.am .v{color:var(--amber);}
+  .sparkbox{border-radius:12px;padding:10px 12px;}
+  .sparkbox .sl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-bottom:6px;display:flex;justify-content:space-between;}
+  .sparkbox canvas{width:100%;height:54px;display:block;}
+  .codes{display:flex;flex-wrap:wrap;gap:5px;}
+  .chip{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--dim);}
+  .chip.s2{color:var(--green);} .chip.s4,.chip.s5{color:var(--red);} .chip.net{color:var(--amber);}
 
-  .errs{flex:1;overflow-y:auto;min-height:0;padding:16px 20px;}
-  .err-card{border:1px solid var(--rule2);border-left:2px solid var(--red);padding:12px 14px;margin-bottom:10px;}
-  .err-card.warn{border-left-color:var(--warn);}
-  .ec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
-  .ec-code{font-family:var(--mono);font-weight:600;color:var(--red);font-size:13px;} .err-card.warn .ec-code{color:var(--warn);}
-  .ec-n{font-size:11px;color:var(--dim);}
-  .ec-s{font-family:var(--mono);font-size:11px;color:var(--ink2);background:var(--card);padding:8px 10px;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:auto;}
+  /* response stream dock */
+  .dock{position:fixed;left:0;right:0;bottom:0;height:216px;z-index:25;display:flex;flex-direction:column;border-top:1px solid var(--line2);border-radius:14px 14px 0 0;transform:translateY(calc(100% - 38px));transition:transform .26s cubic-bezier(.4,0,.2,1);}
+  body.dock-open .dock{transform:none;}
+  .dock-head{display:flex;align-items:center;gap:12px;padding:0 16px;height:38px;flex-shrink:0;border-bottom:1px solid var(--line);cursor:pointer;}
+  .dh-title{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:8px;}
+  .dh-count{font-family:var(--mono);font-size:10px;color:var(--flow);background:rgba(91,140,255,.12);border-radius:999px;padding:1px 8px;}
+  .dh-filter{width:200px;margin-left:auto;background:var(--node2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:10px;}
+  .dh-x{background:transparent;border:none;color:var(--dim);font-size:14px;cursor:pointer;padding:4px;transition:transform .2s;}
+  body.dock-open .dh-x{transform:rotate(180deg);}
+  .dock-body{flex:1;overflow-y:auto;min-height:0;}
+  .dock-empty{padding:26px;text-align:center;color:var(--faint);font-size:12px;}
+  .sr{display:grid;grid-template-columns:70px 44px 56px 1fr;gap:12px;padding:7px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;cursor:pointer;align-items:baseline;white-space:nowrap;overflow:hidden;transition:background .12s;}
+  .sr:hover{background:rgba(255,255,255,.04);}
+  .sr.hide{display:none;}
+  .sr .sr-ts{color:var(--faint);} .sr .sr-id{color:var(--dim);} .sr .sr-co{font-weight:600;}
+  .sr .sr-co.s2{color:var(--green);} .sr .sr-co.s4,.sr .sr-co.s5{color:var(--red);} .sr .sr-co.net{color:var(--amber);}
+  .sr .sr-m{color:var(--dim);overflow:hidden;text-overflow:ellipsis;}
 
-  .sum{flex:1;overflow-y:auto;min-height:0;padding:8px 28px 22px;}
-  .sum-h{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin:20px 0 4px;}
-  .sum-h:first-child{margin-top:8px;}
-  .sum-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--rule);}
-  .sum-k{color:var(--ink2);} .sum-v{font-family:var(--mono);font-weight:500;} .sum-v.ok{color:var(--ok);} .sum-v.err{color:var(--red);}
+  /* controls */
+  .zoom{position:fixed;z-index:26;left:16px;bottom:16px;display:flex;gap:6px;transition:bottom .26s;}
+  body.dock-open .zoom{bottom:232px;}
+  .zoom button{width:34px;height:34px;border-radius:8px;font-size:16px;font-weight:700;color:var(--dim);cursor:pointer;border:1px solid var(--line);background:rgba(16,22,36,.82);backdrop-filter:blur(10px);}
+  .zoom button:hover{color:var(--txt);border-color:var(--line2);}
+  .legend{position:fixed;z-index:20;right:16px;bottom:16px;display:flex;gap:13px;border-radius:10px;padding:8px 13px;font-size:11px;color:var(--dim);transition:opacity .2s;}
+  body.dock-open .legend{opacity:0;pointer-events:none;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;} .legend i{width:9px;height:9px;border-radius:50%;}
+  .tip{position:fixed;z-index:20;left:50%;bottom:18px;transform:translateX(-50%);font-size:11px;color:var(--faint);background:rgba(16,22,36,.7);border:1px solid var(--line);border-radius:999px;padding:6px 14px;backdrop-filter:blur(8px);transition:opacity .2s;}
+  body.dock-open .tip{opacity:0;pointer-events:none;}
 
-  .empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:13px;padding:30px;text-align:center;line-height:1.6;}
-  .empty span{max-width:340px;}
-
-  /* overlays — light ink scrim, NO full-screen blur */
-  .scrim{position:fixed;inset:0;background:rgba(22,21,15,.32);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;}
+  /* overlays: dark scrim, NO full-screen blur */
+  .scrim{position:fixed;inset:0;background:rgba(4,6,12,.58);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;}
   .scrim.show{opacity:1;pointer-events:auto;}
-  .drawer{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:var(--paper);border-left:2px solid var(--ink);z-index:61;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100vw;background:rgba(11,15,25,.97);border-left:1px solid var(--line2);z-index:61;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 50px rgba(0,0,0,.5);}
   .drawer.show{transform:none;}
-  .drawer-head{padding:20px 24px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
-  .drawer-head h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.6px;}
-  .drawer-head .sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:5px;}
-  .drawer-body{flex:1;overflow-y:auto;padding:18px 24px 24px;}
-  .xbtn{background:transparent;border:1px solid var(--rule2);width:30px;height:30px;padding:0;font-size:15px;line-height:1;color:var(--dim);cursor:pointer;flex-shrink:0;}
-  .xbtn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .drawer-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+  .drawer-head h2{margin:0;font-size:19px;font-weight:700;}
+  .drawer-head .sub{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-top:5px;}
+  .drawer-body{flex:1;overflow-y:auto;padding:16px 22px 24px;}
+  .xbtn{background:transparent;border:1px solid var(--line);border-radius:8px;width:30px;height:30px;padding:0;font-size:14px;color:var(--dim);cursor:pointer;flex-shrink:0;}
+  .xbtn:hover{color:var(--txt);border-color:var(--line2);}
 
-  .run-card{border:1px solid var(--rule2);padding:14px 16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s;position:relative;}
-  .run-card:hover{border-color:var(--ink2);}
-  .run-card.viewing{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);}
-  .run-card.pinned{border-left:3px solid var(--ink);}
+  .run-card{border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:11px;cursor:pointer;transition:border-color .15s;background:rgba(255,255,255,.015);}
+  .run-card:hover{border-color:var(--line2);}
+  .run-card.viewing{border-color:var(--amber);}
+  .run-card.pinned{border-left:3px solid var(--flow);}
   .rc-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;}
-  .rc-title{font-weight:600;font-size:14px;}
-  .rc-time{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;}
-  .rc-badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:3px 8px;border:1px solid;height:fit-content;white-space:nowrap;}
-  .rc-badge.ok{color:var(--ok);border-color:var(--ok);} .rc-badge.err{color:var(--red);border-color:var(--red);} .rc-badge.mix{color:var(--warn);border-color:var(--warn);}
-  .rc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
-  .rc-stats .l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);}
-  .rc-stats .v{font-family:var(--mono);font-size:13px;font-weight:500;margin-top:2px;}
-  .rc-actions{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--rule);}
-  .rc-actions button{flex:1;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:7px 4px;border:1px solid var(--rule2);background:transparent;color:var(--dim);}
-  .rc-actions button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-  .rc-actions button.del:hover{background:var(--red);border-color:var(--red);color:var(--paper);}
+  .rc-title{font-weight:600;font-size:13px;}
+  .rc-time{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:3px;}
+  .rc-badge{font-size:9px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid;height:fit-content;white-space:nowrap;}
+  .rc-badge.ok{color:var(--green);border-color:rgba(54,232,160,.4);} .rc-badge.err{color:var(--red);border-color:rgba(255,100,120,.4);} .rc-badge.mix{color:var(--amber);border-color:rgba(255,194,75,.4);}
+  .rc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:11px;}
+  .rc-stats .l{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);}
+  .rc-stats .v{font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px;}
+  .rc-actions{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--line);}
+  .rc-actions button{flex:1;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:7px 4px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--dim);cursor:pointer;}
+  .rc-actions button:hover{color:var(--txt);border-color:var(--line2);}
+  .rc-actions button.del:hover{color:var(--red);border-color:rgba(255,100,120,.4);}
 
-  .det-sec{margin-bottom:22px;}
-  .det-h{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin:0 0 10px;}
-  .det-row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:13px;}
-  .det-row .k{color:var(--ink2);white-space:nowrap;} .det-row .v{font-family:var(--mono);font-weight:500;text-align:right;word-break:break-all;}
-  .det-body{font-family:var(--mono);font-size:12px;line-height:1.6;background:var(--card);border:1px solid var(--rule);padding:12px;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto;}
+  .det-sec{margin-bottom:20px;}
+  .det-h{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);margin:0 0 9px;}
+  .det-row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;}
+  .det-row .k{color:var(--dim);white-space:nowrap;} .det-row .v{font-family:var(--mono);text-align:right;word-break:break-all;color:var(--txt);}
+  .det-body{font-family:var(--mono);font-size:11px;line-height:1.6;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;padding:11px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;color:var(--txt);}
   .det-empty{color:var(--faint);font-style:italic;}
 
-  .modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(22,21,15,.32);}
+  .modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(4,6,12,.58);}
   .modal.show{display:flex;}
-  .modal-box{background:var(--paper);border:2px solid var(--ink);width:100%;max-width:460px;max-height:calc(100vh - 80px);overflow:hidden;display:flex;flex-direction:column;}
-  .modal-head{padding:18px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
-  .modal-head h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.5px;}
-  .modal-body{padding:6px 22px 16px;overflow-y:auto;}
-  .sc-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px;}
-  .sc-row:last-child{border-bottom:none;}
-  .sc-row .desc{color:var(--ink2);} .sc-row .keys{display:flex;gap:5px;}
-  kbd{font-family:var(--mono);font-size:11px;background:var(--card);border:1px solid var(--rule2);border-bottom-width:2px;padding:2px 7px;color:var(--ink2);}
+  .modal-box{width:100%;max-width:430px;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 80px);}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .modal-head h2{margin:0;font-size:17px;font-weight:700;}
+  .modal-body{padding:6px 20px 16px;overflow-y:auto;}
+  .sc-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;}
+  .sc-row:last-child{border-bottom:none;} .sc-row .desc{color:var(--dim);} .sc-row .keys{display:flex;gap:5px;}
+  kbd{font-family:var(--mono);font-size:10px;background:var(--node2);border:1px solid var(--line2);border-radius:5px;padding:2px 7px;color:var(--txt);}
 
-  .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:var(--paper);padding:12px 16px;font-size:13px;max-width:360px;z-index:200;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none;}
-  .toast.show{opacity:1;transform:none;}
-  .toast.err{background:var(--red);} .toast.ok{background:var(--ok);}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);z-index:200;background:rgba(16,22,36,.96);border:1px solid var(--line2);border-radius:9px;padding:11px 16px;font-size:12px;opacity:0;transition:all .22s;pointer-events:none;box-shadow:0 14px 40px rgba(0,0,0,.5);}
+  body.dock-open .toast{bottom:236px;}
+  .toast.show{opacity:1;transform:translateX(-50%);}
+  .toast.err{border-color:var(--red);color:#ffd0d6;} .toast.ok{border-color:var(--green);color:#c7f7e4;}
 </style>
 </head>
-<body data-chart="flat">
-<div class="app">
-  <div class="mast">
-    <div>
-      <h1>Jmetter</h1>
-      <div class="meta"><span>Custody Transaction Load Tester</span><span>Vol. <b>02</b></span><span>Edition — <b>Swiss</b></span></div>
-    </div>
-    <div class="right">
-      <div class="mast-actions">
-        <button class="mbtn" id="historyBtn" title="Run history (⌘H)">History<span class="bdg" id="histBadge"></span></button>
-        <button class="mbtn" id="shortcutsBtn" title="Keyboard shortcuts (?)">Keys</button>
-      </div>
-      <div class="status"><span class="d"></span><span data-status>Ready</span></div>
-      <div class="clock" data-clock>--:--:--</div>
-    </div>
+<body>
+<div class="top">
+  <div class="brand"><span class="o"></span><b>Jmetter</b><span class="v">flow topology · custody-tx load</span></div>
+  <span class="grow"></span>
+  <span class="read" id="readout">graph armed · awaiting traffic</span>
+  <button class="tbtn vw" id="viewExit" style="display:none;">✕ Exit view</button>
+  <div class="tbtns">
+    <button class="tbtn on" id="streamBtn" title="Toggle response stream">Stream</button>
+    <button class="tbtn" id="historyBtn" title="Run history (⌘H)">History<span class="bdg" id="histBadge"></span></button>
+    <button class="tbtn" id="shortcutsBtn" title="Keyboard shortcuts (?)">Keys</button>
   </div>
+  <span class="st"><span class="d"></span><span id="stat">Idle</span></span>
+</div>
 
-  <div class="grid">
-    <aside class="side">
-      <div class="knum">Configuration</div>
-      <div class="sec">
-        <h3>Target</h3>
-        <div class="fld"><label>Endpoint</label><div class="url-row">
-          <select id="method"><option>POST</option><option>PUT</option><option>PATCH</option><option>GET</option><option>DELETE</option></select>
-          <input id="url" value="http://localhost:1616/api/v1/transactions" placeholder="http://localhost:1616/..." /></div></div>
-        <div class="fld"><label>JWT Token</label><textarea id="jwt" class="jwt" placeholder="eyJhbGciOi..."></textarea>
-          <div class="jwt-info" id="jwtInfo"></div></div>
-        <div class="fld"><label>Extra Headers <span class="opt">(optional, JSON)</span></label><textarea id="headers" class="head">{}</textarea>
-          <div class="hint" id="headersHint">e.g. <code>{"X-Trace-Id": "abc123"}</code></div></div>
-      </div>
-      <div class="sec">
-        <h3>Payload</h3>
-        <div class="fld"><label>Request Body — JSON</label><textarea id="payload">{
+<div class="viewport" id="viewport">
+  <canvas id="fx"></canvas>
+  <div class="world" id="world">
+
+    <div class="node" id="nTarget" style="left:30px;top:50px;">
+      <div class="nhead" data-drag><span class="ic t">◎</span><span class="ttl">Target</span><span class="sub">in</span></div>
+      <div class="nbody"><div class="fld"><label>Endpoint</label><div class="url-row">
+        <select id="method"><option>POST</option><option>PUT</option><option>PATCH</option><option>GET</option><option>DELETE</option></select>
+        <input id="url" value="http://localhost:1616/api/v1/transactions" /></div></div></div>
+    </div>
+
+    <div class="node" id="nAuth" style="left:30px;top:196px;">
+      <div class="nhead" data-drag><span class="ic a">🔑</span><span class="ttl">Auth</span><span class="sub">jwt</span></div>
+      <div class="nbody"><div class="fld"><label>JWT Token</label><textarea id="jwt" class="jwt" placeholder="eyJhbGciOi..."></textarea><div class="jwt-info" id="jwtInfo"></div></div></div>
+    </div>
+
+    <div class="node" id="nPayload" style="left:30px;top:392px;">
+      <div class="nhead" data-drag><span class="ic p">{ }</span><span class="ttl">Payload</span><span class="sub">json</span></div>
+      <div class="nbody"><div class="fld"><textarea id="payload">{
   "fromAddress": "bcrt1qksqyu5dgzrkwd0s049htlnkjnq4zwkj0azpzmd",
   "toAddress": "bcrt1qqa68f8ht9sg9h9xgg3ga74ssl2ps4knf8m226z",
   "amount": 10000000,
   "networkName": "BTC",
   "feeStrategy": { "type": "SPECIFIED_RATE", "minimumUnitPerVByte": 5 }
-}</textarea><div class="hint" id="payHint">Valid JSON</div></div>
-      </div>
-      <div class="sec">
-        <h3>Load Profile</h3>
-        <div class="presets">
-          <div class="pre" data-preset="smoke"><div class="n">Smoke</div><div class="d">20 @ 2/s</div></div>
-          <div class="pre on" data-preset="load"><div class="n">Load</div><div class="d">200 @ 20/s</div></div>
-          <div class="pre" data-preset="stress"><div class="n">Stress</div><div class="d">600 @ 60/s</div></div>
-          <div class="pre" data-preset="spike"><div class="n">Spike</div><div class="d">1.5k @ 220</div></div>
-        </div>
-        <div class="row2"><div class="fld"><label>Total</label><input id="total" type="number" min="1" value="200" /></div><div class="fld"><label>Rate /s</label><input id="rps" type="number" min="0.1" step="0.1" value="20" /></div></div>
+}</textarea><div class="payHint" id="payHint">valid json</div></div></div>
+    </div>
+
+    <div class="node wide engine" id="nEngine" style="left:344px;top:170px;">
+      <div class="nhead" data-drag><span class="ic e">⚡</span><span class="ttl">Load Engine</span><span class="sub">run</span></div>
+      <div class="nbody">
+        <div class="fld"><label>Preset</label><div class="presets">
+          <div class="pre" data-preset="smoke"><div class="n">SMK</div><div class="d">20·2</div></div>
+          <div class="pre on" data-preset="load"><div class="n">LOAD</div><div class="d">200·20</div></div>
+          <div class="pre" data-preset="stress"><div class="n">STR</div><div class="d">600·60</div></div>
+          <div class="pre" data-preset="spike"><div class="n">SPK</div><div class="d">1.5k</div></div>
+        </div></div>
+        <div class="row2"><div class="fld"><label>Total</label><input id="total" type="number" min="1" value="200" /></div><div class="fld"><label>Rate/s</label><input id="rps" type="number" min="0.1" step="0.1" value="20" /></div></div>
         <div class="row2"><div class="fld"><label>In-flight</label><input id="concurrency" type="number" min="1" value="24" /></div><div class="fld"><label>Timeout</label><input id="timeout" type="number" min="1" value="30000" /></div></div>
+        <div class="progrow"><div class="track"><div class="fill" id="fill"></div></div><span class="pc" id="pc">0 / 200</span></div>
+        <div class="runbtns"><button class="run" id="startBtn">▶ Run Flow</button><button class="stop" id="stopBtn" disabled>Stop</button></div>
+        <div class="subbtns"><button class="ghost" id="testBtn">Probe</button><button class="ghost" id="copyCurlBtn">Copy cURL</button></div>
       </div>
-      <div class="btns">
-        <button class="go" id="startBtn">Start Load Test</button>
-        <div class="btn-row"><button id="testBtn">Probe</button><button class="kill" id="stopBtn" disabled>Stop</button></div>
-        <button class="curl" id="copyCurlBtn">Copy as cURL</button>
-      </div>
-    </aside>
+    </div>
 
-    <section class="main">
-      <div class="view-banner" id="viewBanner">
-        <div>Viewing saved run from <b id="viewLabel"></b> — read-only</div>
-        <button id="exitViewBtn">Back to live</button>
-      </div>
+    <div class="node tnode" id="nClient" style="left:700px;top:244px;">
+      <div class="nhead" data-drag style="border:none;padding-bottom:0;"><span class="sub" style="margin:0 auto;">client</span></div>
+      <div class="nbody" style="padding-top:6px;"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="m6.5 9.5 2.6 2-2.6 2"/><path d="M12.5 14.5h4"/></svg></div><div class="ttl">Jmetter</div><div class="sub">load driver</div><div class="count">↑ <b id="clientCount">0</b> sent</div></div>
+    </div>
 
-      <div class="kpis">
-        <div class="kpi"><div class="k">Sent</div><div class="v" id="kSent">0</div></div>
-        <div class="kpi ok"><div class="k">Success</div><div class="v"><span id="kRate">—</span><span class="u">%</span></div></div>
-        <div class="kpi red"><div class="k">Failed</div><div class="v" id="kFail">0</div></div>
-        <div class="kpi"><div class="k">Req / sec</div><div class="v" id="kRps">0</div></div>
-        <div class="kpi"><div class="k">p95</div><div class="v"><span id="kP95">0</span><span class="u">ms</span></div></div>
-        <div class="kpi"><div class="k">p99</div><div class="v"><span id="kP99">0</span><span class="u">ms</span></div></div>
-      </div>
+    <div class="node tnode srv" id="nServer" style="left:940px;top:244px;">
+      <div class="nhead" data-drag style="border:none;padding-bottom:0;"><span class="sub" style="margin:0 auto;">server</span></div>
+      <div class="nbody" style="padding-top:6px;"><div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.6 11.6 2.2 2.2 4.4-4.4"/></svg></div><div class="ttl">Custody API</div><div class="sub">:1616</div><div class="count">↓ <b id="serverCount">0</b> resp</div></div>
+    </div>
 
-      <div class="prog">
-        <span class="pl" data-proglabel>Ready</span>
-        <div class="track"><div class="fill" data-bind="prog-w"></div></div>
-        <span class="m">In-flight <b id="inflight">0</b></span>
-        <span class="m">Elapsed <b id="elapsed">00:00</b></span>
-      </div>
-
-      <div class="low">
-        <div class="panel" data-tabhost>
-          <div class="tabs">
-            <div class="tab on" data-tab="thr">Throughput</div>
-            <div class="tab" data-tab="lat">Latency</div>
-            <div class="tab" data-tab="dist">Distribution</div>
-          </div>
-          <div class="pb">
-            <div class="vp on" data-v="thr">
-              <div class="legend"><span><i style="background:var(--ink)"></i>Req/s</span><span><i style="background:var(--red)"></i>Avg latency</span></div>
-              <div class="cw"><canvas id="cThr"></canvas><div class="empty" id="emThr" style="position:absolute;inset:14px;"><span>Throughput and latency plot here once a run begins.</span></div></div>
-            </div>
-            <div class="vp" data-v="lat">
-              <div class="legend"><span><i style="background:var(--dim)"></i>p50</span><span><i style="background:var(--warn)"></i>p95</span><span><i style="background:var(--red)"></i>p99</span></div>
-              <div class="cw"><canvas id="cLat"></canvas><div class="empty" id="emLat" style="position:absolute;inset:14px;"><span>Percentile curves build as requests resolve.</span></div></div>
-            </div>
-            <div class="vp" data-v="dist">
-              <div class="cw"><canvas id="cDist"></canvas><div class="empty" id="emDist" style="position:absolute;inset:14px;"><span>A latency histogram appears as responses return.</span></div></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel" data-tabhost>
-          <div class="tabs">
-            <div class="tab on" data-tab="stream">Responses <span class="c" id="cAll">0</span></div>
-            <div class="tab" data-tab="err">Errors <span class="c" id="cErr">0</span></div>
-            <div class="tab" data-tab="sum">Summary</div>
-            <div class="codes" id="codes"></div>
-          </div>
-          <div class="pb">
-            <div class="vp on" data-v="stream">
-              <div class="resp-tools"><input id="respFilter" placeholder="Filter by code, #id, or body…  (⌘K)" /></div>
-              <div class="log" id="log"><div class="empty"><span>Each response — time, code, latency — lists here as it arrives. Click a row for the full body.</span></div></div>
-            </div>
-            <div class="vp" data-v="err"><div class="errs" id="errors"><div class="empty"><span>Failed requests are grouped here by status code with a sample body.</span></div></div></div>
-            <div class="vp" data-v="sum"><div class="sum" id="sum"><div class="empty"><span>A full breakdown appears here after a run.</span></div></div></div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </div>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="statgrid">
+    <div class="stat glass cy"><div class="k">Sent</div><div class="v" id="kSent">0</div></div>
+    <div class="stat glass green"><div class="k">OK %</div><div class="v" id="kRate">—</div></div>
+    <div class="stat glass red"><div class="k">Fail</div><div class="v" id="kFail">0</div></div>
+    <div class="stat glass am"><div class="k">Req/s</div><div class="v" id="kRps">0</div></div>
+    <div class="stat glass cy"><div class="k">p95</div><div class="v"><span id="kP95">0</span><span class="u">ms</span></div></div>
+    <div class="stat glass vi"><div class="k">p99</div><div class="v"><span id="kP99">0</span><span class="u">ms</span></div></div>
+  </div>
+  <div class="sparkbox glass"><div class="sl"><span>Throughput · Latency</span></div><canvas id="spark"></canvas></div>
+  <div class="codes glass" id="codes" style="border-radius:11px;padding:9px 11px;min-height:34px;"></div>
+</div>
+
+<!-- response stream dock -->
+<div class="dock glass" id="streamDock">
+  <div class="dock-head" id="dockHead">
+    <span class="dh-title">Response Stream <span class="dh-count" id="streamCount">0</span></span>
+    <input class="dh-filter" id="streamFilter" placeholder="filter code · #id · body  (⌘K)" />
+    <button class="dh-x" id="dockChevron" title="Toggle">▾</button>
+  </div>
+  <div class="dock-body" id="streamList"><div class="dock-empty">Responses stream here as requests resolve — click any row for the full request &amp; response body.</div></div>
+</div>
+
+<div class="zoom">
+  <button id="zOut">−</button><button id="zIn">+</button><button id="zFit" style="font-size:11px;font-weight:600;">FIT</button>
+</div>
+<div class="legend glass">
+  <span><i style="background:var(--green)"></i>200/201</span>
+  <span><i style="background:var(--red)"></i>4xx/5xx</span>
+  <span><i style="background:var(--amber)"></i>timeout</span>
+</div>
+<div class="tip">drag nodes · drag canvas to pan · scroll to zoom · ⌘↵ run · esc stop</div>
 
 <!-- history drawer -->
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="histDrawer" aria-hidden="true">
-  <div class="drawer-head">
-    <div><h2>Run History</h2><div class="sub">Last 10 runs · click to view</div></div>
-    <button class="xbtn" id="histClose" aria-label="Close">✕</button>
-  </div>
+  <div class="drawer-head"><div><h2>Run History</h2><div class="sub">Last 10 runs · click to view</div></div><button class="xbtn" id="histClose">✕</button></div>
   <div class="drawer-body" id="histBody"></div>
 </aside>
 
-<!-- response detail drawer -->
+<!-- detail drawer -->
 <aside class="drawer" id="detDrawer" aria-hidden="true">
-  <div class="drawer-head">
-    <div><h2 id="detTitle">Response</h2><div class="sub" id="detSub"></div></div>
-    <button class="xbtn" id="detClose" aria-label="Close">✕</button>
-  </div>
+  <div class="drawer-head"><div><h2 id="detTitle">Response</h2><div class="sub" id="detSub"></div></div><button class="xbtn" id="detClose">✕</button></div>
   <div class="drawer-body" id="detBody"></div>
 </aside>
 
 <!-- shortcuts modal -->
 <div class="modal" id="keysModal">
-  <div class="modal-box">
-    <div class="modal-head"><h2>Keyboard Shortcuts</h2><button class="xbtn" data-close-keys aria-label="Close">✕</button></div>
+  <div class="modal-box glass">
+    <div class="modal-head"><h2>Keyboard Shortcuts</h2><button class="xbtn" data-close-keys>✕</button></div>
     <div class="modal-body">
-      <div class="sc-row"><span class="desc">Start load test</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>↵</kbd></span></div>
-      <div class="sc-row"><span class="desc">Stop running test</span><span class="keys"><kbd>Esc</kbd></span></div>
+      <div class="sc-row"><span class="desc">Run flow</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>↵</kbd></span></div>
+      <div class="sc-row"><span class="desc">Stop run</span><span class="keys"><kbd>Esc</kbd></span></div>
       <div class="sc-row"><span class="desc">Probe (single request)</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>T</kbd></span></div>
-      <div class="sc-row"><span class="desc">Filter responses</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>K</kbd></span></div>
-      <div class="sc-row"><span class="desc">Open run history</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>H</kbd></span></div>
-      <div class="sc-row"><span class="desc">Show this help</span><span class="keys"><kbd>?</kbd></span></div>
+      <div class="sc-row"><span class="desc">Filter response stream</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>K</kbd></span></div>
+      <div class="sc-row"><span class="desc">Run history</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>H</kbd></span></div>
+      <div class="sc-row"><span class="desc">Fit graph to view</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>0</kbd></span></div>
+      <div class="sc-row"><span class="desc">This help</span><span class="keys"><kbd>?</kbd></span></div>
     </div>
   </div>
 </div>
@@ -366,381 +352,96 @@
 <script>
 (() => {
   'use strict';
-  const byId = id => document.getElementById(id);
+  const $ = id => document.getElementById(id);
   const $$ = sel => document.querySelectorAll(sel);
-  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const cvar = (n, f) => css(n) || f;
   const isMac = navigator.platform.toLowerCase().includes('mac');
   if (!isMac) $$('.mk').forEach(k => k.textContent = 'Ctrl');
+  const COL = { green:'#36e8a0', red:'#ff6478', amber:'#ffc24b', flow:'#5b8cff', client:'#38e0ff', server:'#a98bff' };
 
-  /* ---------- state ---------- */
+  /* ===================== real load engine ===================== */
   let running = false, abortCtl = null, pumpTick = null;
   let startAt = 0, endAt = 0, total = 0;
   let sent = 0, ok = 0, fail = 0, inflight = 0, launched = 0;
   let latencies = [], latSum = 0;
   let statusCounts = {}, errorGroups = {}, series = [];
-  let responses = [];                 // newest-first, with full body, for the detail view
+  let responses = [], currentReq = null, viewing = null;
   let lastSampleAt = 0, lastSent = 0;
-  let viewing = null;                 // a saved run object when viewing history
-  let currentReq = null;              // request used by the detail drawer
-  const disp = { sent: 0, fail: 0, rps: 0, p95: 0, p99: 0, rate: 0 };
-  const LIVE_CAP = 600, LOG_CAP = 280;
+  const disp = { sent:0, fail:0, rps:0, p95:0, p99:0, rate:0 };
+  const LIVE_CAP = 600, STREAM_CAP = 280;
+  const PRESETS = { smoke:{total:20,rps:2,concurrency:4}, load:{total:200,rps:20,concurrency:24}, stress:{total:600,rps:60,concurrency:80}, spike:{total:1500,rps:220,concurrency:200} };
 
-  const PRESETS = {
-    smoke:  { total: 20,   rps: 2,   concurrency: 4 },
-    load:   { total: 200,  rps: 20,  concurrency: 24 },
-    stress: { total: 600,  rps: 60,  concurrency: 80 },
-    spike:  { total: 1500, rps: 220, concurrency: 200 },
-  };
+  const arrMin = a => a.reduce((m,v)=>v<m?v:m, Infinity);
+  const arrMax = a => a.reduce((m,v)=>v>m?v:m, -Infinity);
+  const pc = (sorted,p) => sorted.length ? Math.round(sorted[Math.min(sorted.length-1, Math.floor(sorted.length*p))]) : 0;
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const oneLine = s => String(s||'').replace(/\s+/g,' ').trim().slice(0,240);
+  const fmtAgo = ms => { const s=Math.floor((Date.now()-ms)/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; };
+  const prettyMaybe = s => { try { return JSON.stringify(JSON.parse(s),null,2); } catch { return String(s); } };
 
-  /* ---------- helpers ---------- */
-  const arrMin = a => a.reduce((m, v) => (v < m ? v : m), Infinity);
-  const arrMax = a => a.reduce((m, v) => (v > m ? v : m), -Infinity);
-  const pc = (sorted, p) => sorted.length ? Math.round(sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]) : 0;
-  const fmt = s => { s = Math.floor(s); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
-  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const oneLine = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 240);
-  const fmtAgo = ms => { const s = Math.floor((Date.now() - ms) / 1000); if (s < 60) return `${s}s ago`; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; return `${Math.floor(s / 86400)}d ago`; };
-
-  /* ---------- background-safe timers (Web Worker; keeps firing in hidden tabs) ---------- */
-  const timerWorker = (() => {
-    try {
-      const src = "const m=new Map();onmessage=function(e){var d=e.data;" +
-        "if(d.t==='i'){m.set(d.id,setInterval(function(){postMessage(d.id);},d.ms));}" +
-        "else if(d.t==='c'){var h=m.get(d.id);if(h!==undefined){clearInterval(h);m.delete(d.id);}}};";
-      return new Worker(URL.createObjectURL(new Blob([src], { type: 'application/javascript' })));
-    } catch (e) { return null; }
-  })();
-  const timerCbs = new Map();
-  let timerSeq = 1;
+  /* background-safe timers (keep firing in hidden tabs) */
+  const timerWorker = (() => { try {
+    const src = "const m=new Map();onmessage=function(e){var d=e.data;if(d.t==='i'){m.set(d.id,setInterval(function(){postMessage(d.id);},d.ms));}else if(d.t==='c'){var h=m.get(d.id);if(h!==undefined){clearInterval(h);m.delete(d.id);}}};";
+    return new Worker(URL.createObjectURL(new Blob([src],{type:'application/javascript'})));
+  } catch { return null; } })();
+  const timerCbs = new Map(); let timerSeq = 1;
   if (timerWorker) timerWorker.onmessage = e => { const fn = timerCbs.get(e.data); if (fn) fn(); };
-  function wInterval(fn, ms) {
-    if (!timerWorker) return { fb: setInterval(fn, ms) };
-    const id = timerSeq++; timerCbs.set(id, fn); timerWorker.postMessage({ t: 'i', id, ms }); return { id };
-  }
-  function wClear(h) {
-    if (!h) return;
-    if (h.fb != null) { clearInterval(h.fb); return; }
-    timerCbs.delete(h.id); if (timerWorker) timerWorker.postMessage({ t: 'c', id: h.id });
+  function wInterval(fn, ms){ if(!timerWorker) return { fb:setInterval(fn,ms) }; const id=timerSeq++; timerCbs.set(id,fn); timerWorker.postMessage({t:'i',id,ms}); return {id}; }
+  function wClear(h){ if(!h)return; if(h.fb!=null){clearInterval(h.fb);return;} timerCbs.delete(h.id); if(timerWorker) timerWorker.postMessage({t:'c',id:h.id}); }
+
+  function stats(){
+    const end = endAt || performance.now();
+    const elapsed = Math.max(0, (end-startAt)/1000);
+    const sorted = [...latencies].sort((a,b)=>a-b);
+    return { sent, ok, fail, inflight, total, elapsed,
+      rate: sent ? (ok/sent)*100 : null, throughput: elapsed>0 ? sent/elapsed : 0,
+      avg: latencies.length ? latSum/latencies.length : 0,
+      min: sorted.length ? sorted[0] : 0, max: sorted.length ? sorted[sorted.length-1] : 0,
+      p50:pc(sorted,.5), p75:pc(sorted,.75), p90:pc(sorted,.9), p95:pc(sorted,.95), p99:pc(sorted,.99),
+      progress: total ? Math.min(100,(sent/total)*100) : 0, sorted };
   }
 
-  /* ---------- toast ---------- */
-  const toastEl = byId('toast'); let toastTimer;
-  function toast(msg, kind = '') {
-    toastEl.textContent = msg; toastEl.className = 'toast show ' + kind;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+  function buildRequest(){
+    const payload = JSON.parse($('payload').value);
+    const extra = {};
+    let token = $('jwt').value.trim();
+    if (token.toLowerCase().startsWith('bearer ')) token = token.slice(7).trim();
+    const method = $('method').value;
+    const hasBody = method !== 'GET' && method !== 'HEAD';
+    const headers = { 'Accept':'application/json, text/plain, */*', ...extra };
+    if (hasBody) headers['Content-Type'] = 'application/json';
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return { url:$('url').value.trim(), method, headers, body: hasBody ? JSON.stringify(payload) : null };
   }
-
-  /* ---------- status ---------- */
-  function setStatus(text, state) {
-    $$('[data-status]').forEach(e => e.textContent = text);
-    document.body.classList.remove('running', 'state-err', 'state-done', 'state-stopped');
-    if (state) document.body.classList.add(state);
-  }
-
-  /* ---------- clock ---------- */
-  const tickClock = () => { const t = new Date().toTimeString().slice(0, 8); $$('[data-clock]').forEach(c => c.textContent = t); };
-  tickClock(); setInterval(tickClock, 1000);
-
-  /* ---------- JWT ---------- */
-  function decodeJwt(raw) {
-    try {
-      let t = raw.trim(); if (t.toLowerCase().startsWith('bearer ')) t = t.slice(7).trim();
-      if (!t) return null;
-      const parts = t.split('.'); if (parts.length < 2) return { invalid: true };
-      const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const pad = b64 + '='.repeat((4 - b64.length % 4) % 4);
-      return { payload: JSON.parse(decodeURIComponent(escape(atob(pad)))) };
-    } catch { return { invalid: true }; }
-  }
-  function renderJwt() {
-    const el = byId('jwtInfo'), raw = byId('jwt').value;
-    if (!raw.trim()) { el.className = 'jwt-info'; el.innerHTML = ''; return; }
-    const r = decodeJwt(raw);
-    if (!r || r.invalid) { el.className = 'jwt-info show err'; el.innerHTML = `<div class="who">Not a valid JWT</div><div class="jmeta">Couldn't decode the payload — double-check the token.</div>`; return; }
-    const p = r.payload, now = Date.now() / 1000;
-    const who = p.name || p.preferred_username || p.email || p.sub || 'Authenticated';
-    let bits = [], klass = 'ok';
-    if (p.exp) {
-      const secs = p.exp - now;
-      if (secs <= 0) { klass = 'err'; bits.push(`Expired ${Math.abs(Math.round(secs / 60))}m ago`); }
-      else if (secs < 300) { klass = 'warn'; bits.push(`Expires in ${Math.round(secs / 60)}m`); }
-      else if (secs < 3600) bits.push(`Expires in ${Math.round(secs / 60)}m`);
-      else bits.push(`Expires in ${Math.round(secs / 3600)}h`);
-    }
-    if (p.iss) { try { bits.push('iss: ' + new URL(p.iss).hostname); } catch { bits.push('iss: ' + p.iss); } }
-    el.className = 'jwt-info show ' + klass;
-    el.innerHTML = `<div class="who">${escapeHtml(who)}</div><div class="jmeta">${bits.map(escapeHtml).join(' · ')}</div>`;
-  }
-
-  /* ---------- validation ---------- */
-  function validate() {
+  function validate(){
     let okv = true;
-    const pay = byId('payload'), payHint = byId('payHint');
-    try { JSON.parse(pay.value); payHint.textContent = 'Valid JSON'; payHint.classList.remove('bad'); pay.classList.remove('bad'); }
-    catch (e) { okv = false; payHint.textContent = '✗ ' + e.message; payHint.classList.add('bad'); pay.classList.add('bad'); }
-    const hd = byId('headers'), hdHint = byId('headersHint');
-    try { JSON.parse(hd.value || '{}'); hdHint.innerHTML = 'e.g. <code>{"X-Trace-Id": "abc123"}</code>'; hdHint.classList.remove('bad'); hd.classList.remove('bad'); }
-    catch (e) { okv = false; hdHint.textContent = '✗ ' + e.message; hdHint.classList.add('bad'); hd.classList.add('bad'); }
-    if (!byId('url').value.trim()) { okv = false; byId('url').classList.add('bad'); } else byId('url').classList.remove('bad');
+    const pay=$('payload'), ph=$('payHint');
+    try { JSON.parse(pay.value); ph.textContent='valid json'; ph.classList.remove('bad'); pay.classList.remove('bad'); }
+    catch(e){ okv=false; ph.textContent='✗ '+e.message; ph.classList.add('bad'); pay.classList.add('bad'); }
+    if(!$('url').value.trim()){ okv=false; $('url').classList.add('bad'); } else $('url').classList.remove('bad');
     return okv;
   }
 
-  function buildRequest() {
-    const payload = JSON.parse(byId('payload').value);
-    const extra = JSON.parse(byId('headers').value || '{}');
-    let token = byId('jwt').value.trim();
-    if (token.toLowerCase().startsWith('bearer ')) token = token.slice(7).trim();
-    const method = byId('method').value;
-    const hasBody = method !== 'GET' && method !== 'HEAD';
-    const base = { 'Accept': 'application/json, text/plain, */*' };
-    if (hasBody) base['Content-Type'] = 'application/json';
-    const headers = { ...base, ...extra };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    return { url: byId('url').value.trim(), method, headers, body: hasBody ? JSON.stringify(payload) : null };
-  }
-
-  /* ---------- stats ---------- */
-  function stats() {
-    const end = endAt || performance.now();
-    const elapsed = Math.max(0, (end - startAt) / 1000);
-    const sorted = [...latencies].sort((a, b) => a - b);
-    return {
-      sent, ok, fail, inflight, total, elapsed,
-      rate: sent ? (ok / sent) * 100 : null,
-      throughput: elapsed > 0 ? sent / elapsed : 0,
-      avg: latencies.length ? latSum / latencies.length : 0,
-      min: sorted.length ? sorted[0] : 0,
-      max: sorted.length ? sorted[sorted.length - 1] : 0,
-      p50: pc(sorted, .5), p75: pc(sorted, .75), p90: pc(sorted, .9), p95: pc(sorted, .95), p99: pc(sorted, .99),
-      progress: total ? Math.min(100, (sent / total) * 100) : 0,
-      sorted,
-    };
-  }
-
-  /* ---------- render (KPIs / progress, with calm smoothing) ---------- */
-  function render(snap) {
-    const st = stats();
-    const lerp = (a, b) => a + (b - a) * 0.3;
-    if (snap) { disp.sent = st.sent; disp.fail = st.fail; disp.rps = st.throughput; disp.p95 = st.p95; disp.p99 = st.p99; disp.rate = st.rate || 0; }
-    else { disp.sent = lerp(disp.sent, st.sent); disp.fail = lerp(disp.fail, st.fail); disp.rps = lerp(disp.rps, st.throughput); disp.p95 = lerp(disp.p95, st.p95); disp.p99 = lerp(disp.p99, st.p99); disp.rate = lerp(disp.rate, st.rate || 0); }
-    byId('kSent').textContent = Math.round(disp.sent);
-    byId('kFail').textContent = Math.round(disp.fail);
-    byId('kRps').textContent = disp.rps.toFixed(1);
-    byId('kP95').textContent = Math.round(disp.p95);
-    byId('kP99').textContent = Math.round(disp.p99);
-    byId('kRate').textContent = st.rate == null ? '—' : disp.rate.toFixed(1);
-    $$('[data-bind="prog-w"]').forEach(e => e.style.width = st.progress + '%');
-    byId('inflight').textContent = st.inflight;
-    byId('elapsed').textContent = fmt(st.elapsed);
-    byId('cAll').textContent = st.sent;
-    if (running) $$('[data-proglabel]').forEach(e => e.textContent = `${st.sent} / ${st.total}`);
-    renderCodes();
-  }
-
-  /* ---------- responses / log ---------- */
-  let filterText = '';
-  function rowMatches(line) { return !filterText || line.textContent.toLowerCase().includes(filterText.toLowerCase()); }
-  function applyFilter() { $$('#log .lg').forEach(l => l.classList.toggle('hide', !rowMatches(l))); }
-
-  function addLogRow(resp) {
-    const logEl = byId('log');
-    if (!logEl.querySelector('.lg')) logEl.innerHTML = '';
-    const cls = resp.ok ? 's2' : (resp.kind === 'net' ? 'net' : 's' + String(resp.status)[0]);
-    const line = document.createElement('div');
-    line.className = 'lg'; line.dataset.rid = resp.id;
-    line.innerHTML = `<span class="lg-ts">${resp.ts}</span><span class="lg-id">#${resp.id}</span><span class="lg-co ${cls}">${escapeHtml(String(resp.status))}</span><span class="lg-m"></span>`;
-    line.querySelector('.lg-m').textContent = `${resp.latency}ms · ${oneLine(resp.body) || '(no body)'}`;
-    if (!rowMatches(line)) line.classList.add('hide');
-    logEl.prepend(line);
-    while (logEl.children.length > LOG_CAP) logEl.removeChild(logEl.lastChild);
-  }
-
-  function recordResponse(resp) {
-    responses.unshift(resp);
-    if (responses.length > LIVE_CAP) responses.pop();
-    statusCounts[resp.status] = (statusCounts[resp.status] || 0) + 1;
-    if (!resp.ok) {
-      const code = resp.status;
-      if (!errorGroups[code]) errorGroups[code] = { count: 0, sample: resp.body };
-      errorGroups[code].count++;
-      if (!errorGroups[code].sample && resp.body) errorGroups[code].sample = resp.body;
-    }
-    addLogRow(resp);
-  }
-
-  function renderCodes() {
-    const el = byId('codes'); el.innerHTML = '';
-    for (const [c, n] of Object.entries(statusCounts)) {
-      const net = c === 'TIMEOUT' || c === 'NET' || c === 'ABORT';
-      const sp = document.createElement('span');
-      sp.className = 'chip ' + (net ? 'net' : 's' + String(c)[0]);
-      sp.textContent = `${c}·${n}`; el.appendChild(sp);
-    }
-  }
-
-  function renderErrors() {
-    const el = byId('errors'), keys = Object.keys(errorGroups);
-    if (!keys.length) { el.innerHTML = `<div class="empty"><span>No errors. Failed requests are grouped here by status code with a sample body.</span></div>`; byId('cErr').textContent = '0'; return; }
-    let html = '', tot = 0;
-    for (const [code, info] of Object.entries(errorGroups)) {
-      tot += info.count;
-      const net = code === 'TIMEOUT' || code === 'NET' || code === 'ABORT';
-      html += `<div class="err-card ${net ? 'warn' : ''}"><div class="ec-head"><div class="ec-code">${escapeHtml(code)}</div><div class="ec-n">${info.count} occurrence${info.count !== 1 ? 's' : ''}</div></div><div class="ec-s">${escapeHtml((info.sample || '(no body)').slice(0, 600))}</div></div>`;
-    }
-    el.innerHTML = html; byId('cErr').textContent = tot;
-  }
-
-  function renderSummary() {
-    const el = byId('sum'), st = stats();
-    if (!st.sent) { el.innerHTML = `<div class="empty"><span>A full breakdown appears here after a run.</span></div>`; return; }
-    el.innerHTML = `
-      <div class="sum-h">Volume</div>
-      <div class="sum-row"><span class="sum-k">Sent</span><span class="sum-v">${st.sent}</span></div>
-      <div class="sum-row"><span class="sum-k">Successful</span><span class="sum-v ok">${st.ok}</span></div>
-      <div class="sum-row"><span class="sum-k">Failed</span><span class="sum-v ${st.fail ? 'err' : ''}">${st.fail}</span></div>
-      <div class="sum-row"><span class="sum-k">Success rate</span><span class="sum-v">${(st.rate || 0).toFixed(2)}%</span></div>
-      <div class="sum-h">Throughput</div>
-      <div class="sum-row"><span class="sum-k">Duration</span><span class="sum-v">${st.elapsed.toFixed(2)}s</span></div>
-      <div class="sum-row"><span class="sum-k">Avg req/s</span><span class="sum-v">${st.throughput.toFixed(2)}</span></div>
-      <div class="sum-h">Latency</div>
-      <div class="sum-row"><span class="sum-k">Min / Max</span><span class="sum-v">${Math.round(st.min)} / ${Math.round(st.max)} ms</span></div>
-      <div class="sum-row"><span class="sum-k">Average</span><span class="sum-v">${Math.round(st.avg)} ms</span></div>
-      <div class="sum-row"><span class="sum-k">p50 / p90</span><span class="sum-v">${st.p50} / ${st.p90} ms</span></div>
-      <div class="sum-row"><span class="sum-k">p95 / p99</span><span class="sum-v">${st.p95} / ${st.p99} ms</span></div>`;
-  }
-
-  /* ---------- response detail drawer ---------- */
-  function openDetail(rid) {
-    const resp = responses.find(r => String(r.id) === String(rid));
-    if (!resp) return;
-    const req = currentReq || {};
-    byId('detTitle').textContent = `Response #${resp.id}`;
-    byId('detSub').textContent = `${resp.status} · ${resp.latency}ms · ${resp.ts}`;
-    let reqHeaders = req.headers ? Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\n') : '';
-    const body = byId('detBody');
-    body.innerHTML = `
-      <div class="det-sec">
-        <div class="det-h">Request</div>
-        <div class="det-row"><span class="k">Method</span><span class="v">${escapeHtml(req.method || '—')}</span></div>
-        <div class="det-row"><span class="k">URL</span><span class="v">${escapeHtml(req.url || '—')}</span></div>
-        ${reqHeaders ? `<div class="det-h" style="margin-top:14px">Request Headers</div><div class="det-body">${escapeHtml(reqHeaders)}</div>` : ''}
-        ${req.body ? `<div class="det-h" style="margin-top:14px">Request Body</div><div class="det-body">${escapeHtml(prettyMaybe(req.body))}</div>` : ''}
-      </div>
-      <div class="det-sec">
-        <div class="det-h">Response</div>
-        <div class="det-row"><span class="k">Status</span><span class="v">${escapeHtml(String(resp.status))}</span></div>
-        <div class="det-row"><span class="k">Latency</span><span class="v">${resp.latency} ms</span></div>
-        <div class="det-row"><span class="k">Outcome</span><span class="v">${resp.ok ? 'OK' : 'FAILED'}</span></div>
-        <div class="det-h" style="margin-top:14px">Response Body</div>
-        <div class="det-body">${resp.body ? escapeHtml(prettyMaybe(resp.body)) : '<span class="det-empty">(empty body)</span>'}</div>
-      </div>`;
-    openDrawer('detDrawer');
-  }
-  function prettyMaybe(s) { try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return String(s); } }
-
-  /* ---------- charts ---------- */
-  const cv = { thr: byId('cThr'), lat: byId('cLat'), dist: byId('cDist') };
-  const cx = {}; for (const k in cv) cx[k] = cv[k].getContext('2d');
-  function resizeAll() {
-    for (const k in cv) { const c = cv[k], r = c.getBoundingClientRect(); if (!r.width || !r.height) continue; const d = window.devicePixelRatio || 1; c.width = r.width * d; c.height = r.height * d; cx[k].setTransform(d, 0, 0, d, 0, 0); }
-  }
-  const COL = () => ({
-    grid: cvar('--ch-grid', '#eae8e0'), axis: cvar('--ch-axis', '#a8a69c'),
-    rps: cvar('--ch-rps', '#16150f'), lat: cvar('--ch-lat', '#e23b1f'),
-    p50: cvar('--ch-p50', '#9a988e'), p95: cvar('--ch-p95', '#c47b14'), p99: cvar('--ch-p99', '#e23b1f'),
-    ok: cvar('--ch-ok', '#1f7a3d'), warn: cvar('--ch-warn', '#c47b14'), err: cvar('--ch-err', '#e23b1f'),
-    fill: cvar('--ch-fill', 'rgba(20,21,15,.05)'),
-  });
-  function grid(ctx, W, H, pL, pR, pT, pB, c) {
-    ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) { const y = pT + ((H - pT - pB) / 4) * i; ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke(); }
-  }
-  function line(ctx, pts, color, w) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
-
-  function drawThr() {
-    const c = cv.thr, ctx = cx.thr, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
-    const s = series, em = byId('emThr');
-    if (s.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
-    const col = COL(), pL = 44, pR = 46, pT = 12, pB = 22; grid(ctx, W, H, pL, pR, pT, pB, col);
-    const cw = W - pL - pR, ch = H - pT - pB;
-    const mR = Math.max(1, arrMax(s.map(p => p.rps))) * 1.25, mL = Math.max(1, arrMax(s.map(p => p.avgLatency))) * 1.25;
-    const t0 = s[0].t, tN = Math.max(s[s.length - 1].t, t0 + 1), xA = t => pL + ((t - t0) / (tN - t0)) * cw;
-    ctx.beginPath(); s.forEach((p, i) => { const x = xA(p.t), y = pT + ch - (p.rps / mR) * ch; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    ctx.lineTo(xA(s[s.length - 1].t), pT + ch); ctx.lineTo(xA(s[0].t), pT + ch); ctx.closePath(); ctx.fillStyle = col.fill; ctx.fill();
-    line(ctx, s.map(p => ({ x: xA(p.t), y: pT + ch - (p.rps / mR) * ch })), col.rps, 2.2);
-    line(ctx, s.map(p => ({ x: xA(p.t), y: pT + ch - (p.avgLatency / mL) * ch })), col.lat, 2);
-    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.rps; ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) ctx.fillText((mR * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
-    ctx.fillStyle = col.lat; ctx.textAlign = 'left';
-    for (let i = 0; i <= 4; i++) ctx.fillText((mL * (1 - i / 4)).toFixed(0), W - pR + 6, pT + (ch / 4) * i + 3);
-  }
-  function drawLat() {
-    const c = cv.lat, ctx = cx.lat, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
-    const s = series.filter(p => p.p99 > 0), em = byId('emLat');
-    if (s.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
-    const col = COL(), pL = 50, pR = 18, pT = 12, pB = 22; grid(ctx, W, H, pL, pR, pT, pB, col);
-    const cw = W - pL - pR, ch = H - pT - pB;
-    const mL = Math.max(1, arrMax(s.map(p => p.p99))) * 1.2, t0 = s[0].t, tN = Math.max(s[s.length - 1].t, t0 + 1);
-    const xA = t => pL + ((t - t0) / (tN - t0)) * cw, yA = v => pT + ch - (v / mL) * ch;
-    [['p50', col.p50], ['p95', col.p95], ['p99', col.p99]].forEach(([k, color]) => line(ctx, s.map(p => ({ x: xA(p.t), y: yA(p[k]) })), color, 2));
-    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.axis; ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) ctx.fillText((mL * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
-  }
-  function drawDist() {
-    const c = cv.dist, ctx = cx.dist, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
-    const L = [...latencies].sort((a, b) => a - b), em = byId('emDist');
-    if (L.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
-    const col = COL(), pL = 44, pR = 16, pT = 12, pB = 34, cw = W - pL - pR, ch = H - pT - pB;
-    const p99 = pc(L, .99), upper = Math.max(p99, 10), bins = 22, bw = upper / bins, counts = new Array(bins).fill(0);
-    for (const l of L) counts[Math.min(bins - 1, Math.floor(l / bw))]++;
-    const mx = Math.max(arrMax(counts), 1); grid(ctx, W, H, pL, pR, pT, pB, col);
-    const p50 = pc(L, .5), p95 = pc(L, .95), bwpx = cw / bins;
-    for (let i = 0; i < bins; i++) {
-      const h = (counts[i] / mx) * ch, x = pL + i * bwpx + 2, y = pT + ch - h, st = i * bw;
-      let color = col.ok; if (st >= p95) color = col.err; else if (st >= p50) color = col.warn;
-      ctx.fillStyle = color; ctx.fillRect(x, y, bwpx - 4, h);
-    }
-    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.axis; ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) ctx.fillText((mx * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
-    ctx.textAlign = 'center';
-    for (let i = 0; i <= 4; i++) ctx.fillText((upper * i / 4).toFixed(0) + 'ms', pL + (cw / 4) * i, pT + ch + 16);
-  }
-  function drawAll() { drawThr(); drawLat(); drawDist(); }
-
-  function sample() {
-    const now = performance.now(), dt = (now - lastSampleAt) / 1000; if (dt <= 0) return;
-    const instRps = (sent - lastSent) / dt, st = stats();
-    series.push({ t: (now - startAt) / 1000, rps: instRps, avgLatency: st.avg, p50: st.p50, p95: st.p95, p99: st.p99 });
-    if (series.length > 400) series.shift();
-    lastSampleAt = now; lastSent = sent;
-    drawAll();
-  }
-
-  /* ---------- fire one request (own AbortController = timeout isolation) ---------- */
-  async function fireOne(cfg, id, timeout) {
+  async function fireOne(cfg, id, timeout){
     inflight++;
     const t0 = performance.now();
-    const ctl = new AbortController(), runSignal = abortCtl;
-    let timedOut = false;
+    const ctl = new AbortController(), runSignal = abortCtl; let timedOut = false;
     const onStop = () => ctl.abort();
-    if (runSignal) { if (runSignal.signal.aborted) ctl.abort(); else runSignal.signal.addEventListener('abort', onStop, { once: true }); }
+    if (runSignal){ if (runSignal.signal.aborted) ctl.abort(); else runSignal.signal.addEventListener('abort', onStop, {once:true}); }
     const timer = setTimeout(() => { timedOut = true; ctl.abort(); }, timeout);
-    const ts = new Date().toTimeString().slice(0, 8);
+    const ts = new Date().toTimeString().slice(0,8);
     try {
-      const res = await fetch(cfg.url, { method: cfg.method, headers: cfg.headers, body: cfg.body ?? undefined, signal: ctl.signal });
-      const txt = await res.text();
-      const dt = performance.now() - t0;
+      const res = await fetch(cfg.url, { method:cfg.method, headers:cfg.headers, body:cfg.body ?? undefined, signal:ctl.signal });
+      const txt = await res.text(); const dt = performance.now()-t0;
       latencies.push(dt); latSum += dt;
       const okr = res.ok; if (okr) ok++; else fail++;
-      recordResponse({ id, status: res.status, ok: okr, kind: okr ? '2' : String(res.status)[0], latency: Math.round(dt), ts, body: txt.slice(0, 12000) });
-      return { ok: okr, status: res.status };
-    } catch (e) {
-      const dt = performance.now() - t0; fail++;
-      if (timedOut) recordResponse({ id, status: 'TIMEOUT', ok: false, kind: 'net', latency: Math.round(dt), ts, body: `Request exceeded the ${timeout}ms timeout.` });
-      else if (e && e.name === 'AbortError') recordResponse({ id, status: 'ABORT', ok: false, kind: 'net', latency: Math.round(dt), ts, body: 'Request aborted (test stopped).' });
-      else recordResponse({ id, status: 'NET', ok: false, kind: 'net', latency: Math.round(dt), ts, body: e.message || String(e) });
-      return { ok: false, status: timedOut ? 'TIMEOUT' : 'NET' };
+      recordResponse({ id, status:res.status, ok:okr, kind: okr?'2':String(res.status)[0], latency:Math.round(dt), ts, body:txt.slice(0,12000) });
+      return { ok:okr, status:res.status };
+    } catch(e){
+      const dt = performance.now()-t0; fail++;
+      if (timedOut) recordResponse({ id, status:'TIMEOUT', ok:false, kind:'net', latency:Math.round(dt), ts, body:`Request exceeded the ${timeout}ms timeout.` });
+      else if (e && e.name==='AbortError') recordResponse({ id, status:'ABORT', ok:false, kind:'net', latency:Math.round(dt), ts, body:'Request aborted (run stopped).' });
+      else recordResponse({ id, status:'NET', ok:false, kind:'net', latency:Math.round(dt), ts, body:e.message||String(e) });
+      return { ok:false, status: timedOut?'TIMEOUT':'NET' };
     } finally {
       clearTimeout(timer);
       if (runSignal) runSignal.signal.removeEventListener('abort', onStop);
@@ -749,284 +450,435 @@
     }
   }
 
-  /* ---------- run lifecycle ---------- */
-  function resetRun(planned, req) {
-    sent = ok = fail = inflight = launched = 0;
-    latencies = []; latSum = 0; series = []; responses = [];
-    statusCounts = {}; errorGroups = {};
-    disp.sent = disp.fail = disp.rps = disp.p95 = disp.p99 = disp.rate = 0;
-    total = planned; startAt = performance.now(); endAt = 0;
-    lastSampleAt = startAt; lastSent = 0;
-    currentReq = req;
-    byId('log').innerHTML = `<div class="empty"><span>Waiting for responses… they stream in here as soon as the first request resolves.</span></div>`;
-    renderCodes(); renderErrors(); renderSummary(); drawAll();
+  function recordResponse(resp){
+    responses.unshift(resp); if (responses.length>LIVE_CAP) responses.pop();
+    statusCounts[resp.status] = (statusCounts[resp.status]||0)+1;
+    if (!resp.ok){ const c=resp.status; if(!errorGroups[c]) errorGroups[c]={count:0,sample:resp.body}; errorGroups[c].count++; }
+    spawnPacket(resp);          // topology animation
+    addStreamRow(resp);         // response stream dock
   }
 
-  async function start() {
-    if (running) return;
-    exitViewing();
-    if (!validate()) { toast('Fix the highlighted fields first.', 'err'); return; }
-    const req = buildRequest();
-    const totalN = parseInt(byId('total').value, 10);
-    const rps = parseFloat(byId('rps').value);
-    const conc = parseInt(byId('concurrency').value, 10);
-    const timeout = parseInt(byId('timeout').value, 10);
-    ['total', 'rps', 'concurrency', 'timeout'].forEach(id => byId(id).classList.remove('bad'));
-    const bad = (id, msg) => { byId(id).classList.add('bad'); byId(id).focus(); toast(msg, 'err'); };
-    if (!Number.isFinite(totalN) || totalN < 1) return bad('total', 'Total must be a whole number ≥ 1.');
-    if (!Number.isFinite(rps) || rps <= 0) return bad('rps', 'Rate must be greater than 0.');
-    if (!Number.isFinite(conc) || conc < 1) return bad('concurrency', 'In-flight must be ≥ 1.');
-    if (!Number.isFinite(timeout) || timeout < 1) return bad('timeout', 'Timeout must be ≥ 1 ms.');
+  function resetRun(planned, req){
+    sent=ok=fail=inflight=launched=0; latencies=[]; latSum=0; series=[]; responses=[];
+    statusCounts={}; errorGroups={}; disp.sent=disp.fail=disp.rps=disp.p95=disp.p99=disp.rate=0;
+    total=planned; startAt=performance.now(); endAt=0; lastSampleAt=startAt; lastSent=0; currentReq=req;
+    particles.length=0;
+    $('streamList').innerHTML = `<div class="dock-empty">Waiting for responses…</div>`;
+    renderCodes(); drawSpark();
+  }
 
-    running = true; abortCtl = new AbortController();
-    resetRun(totalN, req);
-    byId('startBtn').disabled = true; byId('testBtn').disabled = true; byId('stopBtn').disabled = false;
-    setStatus('Running', 'running');
-    render(true);
+  function renderTick(snap){
+    const st = stats();
+    bumpCount('clientCount', launched); bumpCount('serverCount', st.sent);
+    const lerp=(a,b)=>a+(b-a)*0.3;
+    if (snap){ disp.sent=st.sent; disp.fail=st.fail; disp.rps=st.throughput; disp.p95=st.p95; disp.p99=st.p99; disp.rate=st.rate||0; }
+    else { disp.sent=lerp(disp.sent,st.sent); disp.fail=lerp(disp.fail,st.fail); disp.rps=lerp(disp.rps,st.throughput); disp.p95=lerp(disp.p95,st.p95); disp.p99=lerp(disp.p99,st.p99); disp.rate=lerp(disp.rate,st.rate||0); }
+    $('kSent').textContent=Math.round(disp.sent); $('kFail').textContent=Math.round(disp.fail);
+    $('kRps').textContent=disp.rps.toFixed(1); $('kP95').textContent=Math.round(disp.p95); $('kP99').textContent=Math.round(disp.p99);
+    $('kRate').textContent=st.rate==null?'—':disp.rate.toFixed(1);
+    $('fill').style.width=st.progress+'%'; $('pc').textContent=`${st.sent} / ${st.total}`;
+    renderCodes();
+    if (running) $('readout').textContent=`traffic live · ${st.sent}/${st.total} · ${disp.rps.toFixed(0)} rps · ${(st.rate||0).toFixed(0)}% ok`;
+  }
+  const bumpVals = {};
+  function bumpCount(id,val){ const el=$(id); if(!el||bumpVals[id]===val)return; bumpVals[id]=val; el.textContent=val; const w=el.parentNode; w.classList.add('bump'); clearTimeout(w._bt); w._bt=setTimeout(()=>w.classList.remove('bump'),120); }
+  function renderCodes(){ const el=$('codes'); el.innerHTML=''; for(const[c,n]of Object.entries(statusCounts)){ const net=c==='TIMEOUT'||c==='NET'||c==='ABORT'; const sp=document.createElement('span'); sp.className='chip '+(net?'net':'s'+String(c)[0]); sp.textContent=`${c}·${n}`; el.appendChild(sp);} }
 
-    const sampler = wInterval(sample, 380);
-    const ticker = wInterval(() => render(false), 100);
-    const intervalMs = 1000 / rps;
-    const runStart = performance.now();
-    await new Promise(resolve => {
-      let handle = null;
-      pumpTick = () => {
-        if (running && launched < totalN) {
-          const elapsed = performance.now() - runStart;
-          const due = Math.min(totalN, Math.floor(elapsed / intervalMs) + 1);
-          while (launched < due && inflight < conc && running) fireOne(req, ++launched, timeout);
+  /* response stream dock */
+  let filterText = '';
+  const rowMatch = el => !filterText || el.textContent.toLowerCase().includes(filterText.toLowerCase());
+  function applyFilter(){ $$('#streamList .sr').forEach(r=>r.classList.toggle('hide', !rowMatch(r))); }
+  function addStreamRow(resp){
+    const list = $('streamList'); if (!list.querySelector('.sr')) list.innerHTML='';
+    const cls = resp.ok ? 's2' : (resp.kind==='net' ? 'net' : 's'+String(resp.status)[0]);
+    const row = document.createElement('div'); row.className='sr'; row.dataset.rid=resp.id;
+    row.innerHTML = `<span class="sr-ts">${resp.ts}</span><span class="sr-id">#${resp.id}</span><span class="sr-co ${cls}">${escapeHtml(String(resp.status))}</span><span class="sr-m"></span>`;
+    row.querySelector('.sr-m').textContent = `${resp.latency}ms · ${oneLine(resp.body)||'(no body)'}`;
+    if (!rowMatch(row)) row.classList.add('hide');
+    list.prepend(row);
+    while (list.children.length > STREAM_CAP) list.removeChild(list.lastChild);
+    $('streamCount').textContent = Math.min(responses.length, LIVE_CAP);
+  }
+
+  /* detail drawer */
+  function openDetail(rid){
+    const resp = responses.find(r=>String(r.id)===String(rid)); if(!resp) return;
+    const req = currentReq || {};
+    $('detTitle').textContent = `Response #${resp.id}`;
+    $('detSub').textContent = `${resp.status} · ${resp.latency}ms · ${resp.ts}`;
+    const reqHeaders = req.headers ? Object.entries(req.headers).map(([k,v])=>`${k}: ${v}`).join('\n') : '';
+    $('detBody').innerHTML = `
+      <div class="det-sec">
+        <div class="det-h">Request</div>
+        <div class="det-row"><span class="k">Method</span><span class="v">${escapeHtml(req.method||'—')}</span></div>
+        <div class="det-row"><span class="k">URL</span><span class="v">${escapeHtml(req.url||'—')}</span></div>
+        ${reqHeaders?`<div class="det-h" style="margin-top:14px">Request Headers</div><div class="det-body">${escapeHtml(reqHeaders)}</div>`:''}
+        ${req.body?`<div class="det-h" style="margin-top:14px">Request Body</div><div class="det-body">${escapeHtml(prettyMaybe(req.body))}</div>`:''}
+      </div>
+      <div class="det-sec">
+        <div class="det-h">Response</div>
+        <div class="det-row"><span class="k">Status</span><span class="v">${escapeHtml(String(resp.status))}</span></div>
+        <div class="det-row"><span class="k">Latency</span><span class="v">${resp.latency} ms</span></div>
+        <div class="det-row"><span class="k">Outcome</span><span class="v">${resp.ok?'OK':'FAILED'}</span></div>
+        <div class="det-h" style="margin-top:14px">Response Body</div>
+        <div class="det-body">${resp.body?escapeHtml(prettyMaybe(resp.body)):'<span class="det-empty">(empty body)</span>'}</div>
+      </div>`;
+    openDrawer('detDrawer');
+  }
+
+  /* ===================== lifecycle ===================== */
+  async function start(){
+    if (running) return; exitViewing();
+    if (!validate()){ toast('Fix the payload / URL first.', 'err'); return; }
+    let req; try { req = buildRequest(); } catch(e){ toast('Payload is not valid JSON.', 'err'); return; }
+    const totalN=parseInt($('total').value,10), rps=parseFloat($('rps').value), conc=parseInt($('concurrency').value,10), timeout=parseInt($('timeout').value,10);
+    ['total','rps','concurrency','timeout'].forEach(id=>$(id).classList.remove('bad'));
+    const bad=(id,m)=>{ $(id).classList.add('bad'); toast(m,'err'); };
+    if(!Number.isFinite(totalN)||totalN<1) return bad('total','Total must be ≥ 1.');
+    if(!Number.isFinite(rps)||rps<=0) return bad('rps','Rate must be > 0.');
+    if(!Number.isFinite(conc)||conc<1) return bad('concurrency','In-flight must be ≥ 1.');
+    if(!Number.isFinite(timeout)||timeout<1) return bad('timeout','Timeout must be ≥ 1 ms.');
+
+    running=true; abortCtl=new AbortController(); resetRun(totalN, req);
+    setRunState('running');
+    renderTick(true);
+    const sampler=wInterval(sample,380), ticker=wInterval(()=>renderTick(false),100);
+    const intervalMs=1000/rps, runStart=performance.now();
+    await new Promise(resolve=>{
+      let handle=null;
+      pumpTick=()=>{
+        if (running && launched<totalN){
+          const elapsed=performance.now()-runStart;
+          const due=Math.min(totalN, Math.floor(elapsed/intervalMs)+1);
+          while (launched<due && inflight<conc && running) fireOne(req, ++launched, timeout);
         }
-        if ((!running || launched >= totalN) && inflight === 0) { wClear(handle); pumpTick = null; resolve(); }
+        if ((!running||launched>=totalN) && inflight===0){ wClear(handle); pumpTick=null; resolve(); }
       };
-      handle = wInterval(pumpTick, Math.max(5, Math.min(50, intervalMs)));
+      handle=wInterval(pumpTick, Math.max(5, Math.min(50, intervalMs)));
       pumpTick();
     });
-    wClear(sampler); wClear(ticker); sample();
-    endAt = performance.now();
-    const wasStopped = !running; running = false;
-    byId('startBtn').disabled = false; byId('testBtn').disabled = false; byId('stopBtn').disabled = true;
-    render(true); renderSummary(); renderErrors();
-    if (wasStopped) { setStatus('Stopped', 'state-stopped'); $$('[data-proglabel]').forEach(e => e.textContent = `Stopped · ${sent} / ${total}`); }
-    else {
-      setStatus(fail ? 'Complete' : 'Complete', fail ? 'state-err' : 'state-done');
-      $$('[data-proglabel]').forEach(e => e.textContent = 'Complete');
-      toast(`Run finished — ${ok} ok, ${fail} failed`, fail ? 'err' : 'ok');
-    }
+    wClear(sampler); wClear(ticker); sample(); endAt=performance.now();
+    const wasStopped = !running; running=false;
+    renderTick(true);
+    setRunState(wasStopped ? 'stopped' : 'done');
     saveRun();
   }
-
-  function stop() { if (!running) return; running = false; try { abortCtl.abort(); } catch {} }
-
-  async function probe() {
-    if (running) return;
-    exitViewing();
-    if (!validate()) { toast('Fix the highlighted fields first.', 'err'); return; }
-    const req = buildRequest();
-    const timeout = parseInt(byId('timeout').value, 10) || 30000;
-    running = true; abortCtl = new AbortController();
-    resetRun(1, req);
-    byId('startBtn').disabled = true; byId('testBtn').disabled = true; byId('stopBtn').disabled = false;
-    setStatus('Probing', 'running'); render(true);
-    const sampler = wInterval(sample, 380), ticker = wInterval(() => render(false), 100);
-    const r = await fireOne(req, 1, timeout);
-    wClear(sampler); wClear(ticker); sample();
-    endAt = performance.now(); running = false;
-    byId('startBtn').disabled = false; byId('testBtn').disabled = false; byId('stopBtn').disabled = true;
-    render(true); renderSummary(); renderErrors();
-    if (r.ok) { setStatus('Complete', 'state-done'); toast(`Probe succeeded (${r.status})`, 'ok'); }
-    else { setStatus('Complete', 'state-err'); toast(`Probe failed (${r.status})`, 'err'); }
-    $$('[data-proglabel]').forEach(e => e.textContent = 'Complete');
-    saveRun();
+  function stop(){ if(!running) return; running=false; try{ abortCtl.abort(); }catch{} }
+  async function probe(){
+    if (running) return; exitViewing();
+    if (!validate()){ toast('Fix the payload / URL first.', 'err'); return; }
+    let req; try { req=buildRequest(); } catch { toast('Payload is not valid JSON.','err'); return; }
+    const timeout=parseInt($('timeout').value,10)||30000;
+    running=true; abortCtl=new AbortController(); resetRun(1, req);
+    setRunState('running'); renderTick(true);
+    const sampler=wInterval(sample,380), ticker=wInterval(()=>renderTick(false),100);
+    const r=await fireOne(req, 1, timeout);
+    wClear(sampler); wClear(ticker); sample(); endAt=performance.now(); running=false;
+    renderTick(true); setRunState('done');
+    toast(r.ok?`Probe ok (${r.status})`:`Probe failed (${r.status})`, r.ok?'ok':'err');
   }
 
-  /* ---------- history ---------- */
-  const HKEY = 'jmetter.history', HMAX = 10;
-  function loadHistory() { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch { return []; } }
-  function saveHistory(list) {
-    let l = list.slice();
-    for (let attempt = 0; attempt < 12; attempt++) {
-      try { localStorage.setItem(HKEY, JSON.stringify(l)); byId('histBadge').textContent = l.length ? ' ' + l.length : ''; return; }
-      catch (e) {
-        // Quota exceeded — drop the oldest unpinned run, then the heaviest data, and retry.
-        const idx = [...l].reverse().findIndex(r => !r.pinned);
-        if (idx >= 0) l.splice(l.length - 1 - idx, 1);
-        else if (l.length) l[l.length - 1].responses = [];
-        else return;
-      }
+  function setRunState(s){
+    document.body.classList.toggle('running', s==='running');
+    document.body.classList.remove('state-err','viewing');
+    $('startBtn').disabled = s==='running'; $('testBtn').disabled = s==='running'; $('stopBtn').disabled = s!=='running';
+    const st = stats();
+    if (s==='running'){ $('stat').textContent='Streaming'; }
+    else if (s==='done'){
+      if (st.fail>0) document.body.classList.add('state-err');
+      $('stat').textContent='Complete';
+      $('readout').textContent=`complete · ${st.sent} sent · ${(st.rate||0).toFixed(1)}% ok · ${st.throughput.toFixed(1)} rps avg`;
+      if (st.sent>1) toast(`Run finished — ${st.ok} ok, ${st.fail} failed`, st.fail?'err':'ok');
+    } else if (s==='stopped'){
+      $('stat').textContent='Stopped'; $('readout').textContent=`stopped · ${st.sent}/${st.total} sent`;
+    } else { $('stat').textContent='Idle'; $('readout').textContent='graph armed · awaiting traffic'; }
+    drawSpark();
+  }
+
+  /* ===================== history ===================== */
+  const HKEY='jmetter.flow.history', HMAX=10;
+  function loadHistory(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch{ return []; } }
+  function saveHistory(list){
+    let l=list.slice();
+    for(let i=0;i<12;i++){
+      try{ localStorage.setItem(HKEY, JSON.stringify(l)); $('histBadge').textContent = l.length?' '+l.length:''; return; }
+      catch(e){ const idx=[...l].reverse().findIndex(r=>!r.pinned); if(idx>=0) l.splice(l.length-1-idx,1); else if(l.length) l[l.length-1].responses=[]; else return; }
     }
   }
-  function saveRun() {
+  function saveRun(){
     if (!sent) return;
-    const st = stats(), elapsed = ((endAt || performance.now()) - startAt) / 1000;
-    const run = {
-      id: Date.now(), endedAt: Date.now(), duration: elapsed,
-      config: { url: currentReq.url, method: currentReq.method, total, rps: parseFloat(byId('rps').value), concurrency: parseInt(byId('concurrency').value, 10), timeout: parseInt(byId('timeout').value, 10) },
-      reqHeaders: currentReq.headers, payload: currentReq.body || '',
-      stats: { sent, ok, fail }, statusCounts: { ...statusCounts },
-      errorGroups: JSON.parse(JSON.stringify(errorGroups)),
-      latency: { min: st.min, max: st.max, avg: st.avg, p50: st.p50, p75: st.p75, p90: st.p90, p95: st.p95, p99: st.p99 },
-      latSamples: latencies.length > 1500 ? latencies.filter((_, i) => i % Math.ceil(latencies.length / 1500) === 0) : [...latencies],
-      series: series.length > 300 ? series.filter((_, i) => i % Math.ceil(series.length / 300) === 0) : [...series],
-      // keep response data so a saved run can replay its responses (capped for storage)
-      responses: responses.slice(0, 120).map(r => ({ id: r.id, status: r.status, ok: r.ok, kind: r.kind, latency: r.latency, ts: r.ts, body: String(r.body || '').slice(0, 1500) })),
-      pinned: false,
-    };
-    const list = loadHistory(); list.unshift(run);
-    const pinned = list.filter(r => r.pinned), unpinned = list.filter(r => !r.pinned);
-    while (pinned.length + unpinned.length > HMAX && unpinned.length) unpinned.pop();
-    saveHistory([...pinned, ...unpinned]); renderDrawer();
+    const st=stats(), elapsed=((endAt||performance.now())-startAt)/1000;
+    const run={ id:Date.now(), endedAt:Date.now(), duration:elapsed, launched,
+      config:{ url:currentReq.url, method:currentReq.method, total, rps:parseFloat($('rps').value), concurrency:parseInt($('concurrency').value,10), timeout:parseInt($('timeout').value,10) },
+      reqHeaders:currentReq.headers, payload:currentReq.body||'',
+      stats:{ sent, ok, fail }, statusCounts:{...statusCounts}, errorGroups:JSON.parse(JSON.stringify(errorGroups)),
+      latency:{ min:st.min, max:st.max, avg:st.avg, p50:st.p50, p90:st.p90, p95:st.p95, p99:st.p99 },
+      series: series.length>300 ? series.filter((_,i)=>i%Math.ceil(series.length/300)===0) : [...series],
+      responses: responses.slice(0,120).map(r=>({ id:r.id, status:r.status, ok:r.ok, kind:r.kind, latency:r.latency, ts:r.ts, body:String(r.body||'').slice(0,1500) })),
+      pinned:false };
+    const list=loadHistory(); list.unshift(run);
+    const pin=list.filter(r=>r.pinned), un=list.filter(r=>!r.pinned);
+    while(pin.length+un.length>HMAX && un.length) un.pop();
+    saveHistory([...pin,...un]); renderDrawer();
   }
-  function renderDrawer() {
-    const list = loadHistory(); byId('histBadge').textContent = list.length ? ' ' + list.length : '';
-    const body = byId('histBody');
-    if (!list.length) { body.innerHTML = `<div class="empty" style="height:60%"><span>No runs yet. Your last 10 runs are saved here automatically — pin one to keep it.</span></div>`; return; }
-    body.innerHTML = list.map(run => {
-      const rate = run.stats.sent ? (run.stats.ok / run.stats.sent * 100) : 0;
-      const cls = run.stats.fail === 0 ? 'ok' : run.stats.ok === 0 ? 'err' : 'mix';
-      const txt = run.stats.fail === 0 ? 'Pass' : run.stats.ok === 0 ? 'Fail' : `${rate.toFixed(0)}%`;
-      const view = viewing && viewing.id === run.id;
-      return `<div class="run-card ${view ? 'viewing' : ''} ${run.pinned ? 'pinned' : ''}" data-id="${run.id}">
-        <div class="rc-head"><div><div class="rc-title">${escapeHtml(run.config.method || 'POST')} · ${run.stats.sent} req @ ${run.config.rps || 0}/s</div><div class="rc-time">${fmtAgo(run.endedAt)} · ${run.duration.toFixed(1)}s · ${(run.responses || []).length} bodies</div></div><span class="rc-badge ${cls}">${txt}</span></div>
-        <div class="rc-stats"><div><div class="l">OK</div><div class="v" style="color:var(--ok)">${run.stats.ok}</div></div><div><div class="l">Fail</div><div class="v" style="color:${run.stats.fail ? 'var(--red)' : 'var(--ink)'}">${run.stats.fail}</div></div><div><div class="l">Avg</div><div class="v">${Math.round(run.latency.avg)}ms</div></div><div><div class="l">p95</div><div class="v">${run.latency.p95}ms</div></div></div>
-        <div class="rc-actions"><button data-act="view">View</button><button data-act="rerun">Rerun</button><button data-act="pin">${run.pinned ? 'Unpin' : 'Pin'}</button><button data-act="export">Export</button><button data-act="del" class="del">Del</button></div>
+  function renderDrawer(){
+    const list=loadHistory(); $('histBadge').textContent=list.length?' '+list.length:'';
+    const body=$('histBody');
+    if(!list.length){ body.innerHTML=`<div class="dock-empty" style="margin-top:30px">No runs yet. Your last 10 runs save here automatically — pin one to keep it.</div>`; return; }
+    body.innerHTML = list.map(run=>{
+      const rate=run.stats.sent?(run.stats.ok/run.stats.sent*100):0;
+      const cls=run.stats.fail===0?'ok':run.stats.ok===0?'err':'mix';
+      const txt=run.stats.fail===0?'Pass':run.stats.ok===0?'Fail':`${rate.toFixed(0)}%`;
+      const vw=viewing&&viewing.id===run.id;
+      return `<div class="run-card ${vw?'viewing':''} ${run.pinned?'pinned':''}" data-id="${run.id}">
+        <div class="rc-head"><div><div class="rc-title">${escapeHtml(run.config.method||'POST')} · ${run.stats.sent} req @ ${run.config.rps||0}/s</div><div class="rc-time">${fmtAgo(run.endedAt)} · ${run.duration.toFixed(1)}s · ${(run.responses||[]).length} bodies</div></div><span class="rc-badge ${cls}">${txt}</span></div>
+        <div class="rc-stats"><div><div class="l">OK</div><div class="v" style="color:var(--green)">${run.stats.ok}</div></div><div><div class="l">Fail</div><div class="v" style="color:${run.stats.fail?'var(--red)':'var(--txt)'}">${run.stats.fail}</div></div><div><div class="l">Avg</div><div class="v">${Math.round(run.latency.avg)}ms</div></div><div><div class="l">p95</div><div class="v">${run.latency.p95}ms</div></div></div>
+        <div class="rc-actions"><button data-act="view">View</button><button data-act="rerun">Rerun</button><button data-act="pin">${run.pinned?'Unpin':'Pin'}</button><button data-act="export">Export</button><button data-act="del" class="del">Del</button></div>
       </div>`;
     }).join('');
-    body.querySelectorAll('.run-card').forEach(card => {
-      const id = parseInt(card.dataset.id, 10);
-      card.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const run = loadHistory().find(r => r.id === id); if (!run) return;
-        const act = btn.dataset.act;
-        if (act === 'view') viewRun(run);
-        else if (act === 'rerun') rerun(run);
-        else if (act === 'pin') { const l = loadHistory(), r = l.find(x => x.id === id); if (r) { r.pinned = !r.pinned; saveHistory(l); renderDrawer(); toast(r.pinned ? 'Pinned' : 'Unpinned'); } }
-        else if (act === 'export') exportRun(run);
-        else if (act === 'del') { if (confirm('Delete this run?')) { saveHistory(loadHistory().filter(r => r.id !== id)); if (viewing && viewing.id === id) exitViewing(); renderDrawer(); } }
+    body.querySelectorAll('.run-card').forEach(card=>{
+      const id=parseInt(card.dataset.id,10);
+      card.querySelectorAll('[data-act]').forEach(btn=>btn.addEventListener('click',e=>{
+        e.stopPropagation(); const run=loadHistory().find(r=>r.id===id); if(!run)return; const act=btn.dataset.act;
+        if(act==='view') viewRun(run);
+        else if(act==='rerun') rerun(run);
+        else if(act==='pin'){ const l=loadHistory(),r=l.find(x=>x.id===id); if(r){ r.pinned=!r.pinned; saveHistory(l); renderDrawer(); toast(r.pinned?'Pinned':'Unpinned'); } }
+        else if(act==='export') exportRun(run);
+        else if(act==='del'){ if(confirm('Delete this run?')){ saveHistory(loadHistory().filter(r=>r.id!==id)); if(viewing&&viewing.id===id) exitViewing(); renderDrawer(); } }
       }));
-      card.addEventListener('click', () => { const run = loadHistory().find(r => r.id === id); if (run) viewRun(run); });
+      card.addEventListener('click',()=>{ const run=loadHistory().find(r=>r.id===id); if(run) viewRun(run); });
     });
   }
-  function exportRun(run) {
-    const blob = new Blob([JSON.stringify(run, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = `jmetter-run-${new Date(run.endedAt).toISOString().replace(/[:.]/g, '-')}.json`; a.click();
-    URL.revokeObjectURL(url); toast('Run exported as JSON', 'ok');
+  function exportRun(run){
+    const blob=new Blob([JSON.stringify(run,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`jmetter-run-${new Date(run.endedAt).toISOString().replace(/[:.]/g,'-')}.json`; a.click();
+    URL.revokeObjectURL(url); toast('Run exported as JSON','ok');
   }
-  function rerun(run) {
-    if (running) { toast('Stop the current run first', 'err'); return; }
-    if (run.config) { byId('url').value = run.config.url || byId('url').value; byId('method').value = run.config.method || 'POST';
-      if (run.config.total) byId('total').value = run.config.total; if (run.config.rps) byId('rps').value = run.config.rps;
-      if (run.config.concurrency) byId('concurrency').value = run.config.concurrency; if (run.config.timeout) byId('timeout').value = run.config.timeout; }
-    if (run.payload) byId('payload').value = run.payload;
-    closeDrawer(); toast('Config loaded — starting', ''); setTimeout(start, 320);
+  function rerun(run){
+    if (running){ toast('Stop the current run first','err'); return; }
+    if (run.config){ $('url').value=run.config.url||$('url').value; $('method').value=run.config.method||'POST';
+      if(run.config.total)$('total').value=run.config.total; if(run.config.rps)$('rps').value=run.config.rps;
+      if(run.config.concurrency)$('concurrency').value=run.config.concurrency; if(run.config.timeout)$('timeout').value=run.config.timeout; }
+    if (run.payload) $('payload').value=run.payload;
+    closeDrawer(); toast('Config loaded — running','' ); setTimeout(start,320);
   }
-  function viewRun(run) {
-    if (running) { toast('Stop the current run before viewing history', 'err'); return; }
-    viewing = run;
-    byId('viewBanner').classList.add('show'); byId('viewLabel').textContent = new Date(run.endedAt).toLocaleString();
-    sent = run.stats.sent; ok = run.stats.ok; fail = run.stats.fail; inflight = 0;
-    latencies = run.latSamples || []; latSum = latencies.reduce((a, b) => a + b, 0);
-    series = [...(run.series || [])];
-    statusCounts = { ...run.statusCounts }; errorGroups = JSON.parse(JSON.stringify(run.errorGroups || {}));
-    responses = (run.responses || []).slice();
-    currentReq = { url: run.config.url, method: run.config.method, headers: run.reqHeaders || {}, body: run.payload || '' };
-    total = run.config.total || run.stats.sent;
-    startAt = performance.now() - run.duration * 1000; endAt = performance.now();
-    render(true); renderCodes(); renderErrors(); renderSummary(); drawAll();
-    // rebuild the response log from stored responses
-    const logEl = byId('log');
-    if (responses.length) { logEl.innerHTML = ''; [...responses].reverse().forEach(addLogRow); }
-    else logEl.innerHTML = `<div class="empty"><span>This saved run kept no response bodies.</span></div>`;
-    $$('[data-proglabel]').forEach(e => e.textContent = `Saved · ${run.stats.sent} req`);
-    setStatus('Viewing', run.stats.fail ? 'state-err' : 'state-done');
+  function viewRun(run){
+    if (running){ toast('Stop the current run before viewing history','err'); return; }
+    viewing=run;
+    sent=run.stats.sent; ok=run.stats.ok; fail=run.stats.fail; inflight=0; launched=run.launched||run.stats.sent;
+    latencies=[]; latSum=0; series=[...(run.series||[])];
+    statusCounts={...run.statusCounts}; errorGroups=JSON.parse(JSON.stringify(run.errorGroups||{}));
+    responses=(run.responses||[]).slice();
+    currentReq={ url:run.config.url, method:run.config.method, headers:run.reqHeaders||{}, body:run.payload||'' };
+    total=run.config.total||run.stats.sent; startAt=performance.now()-run.duration*1000; endAt=performance.now();
+    // reflect stored latency aggregates without the raw array
+    disp.sent=sent; disp.fail=fail; disp.rps=run.duration?sent/run.duration:0; disp.p95=run.latency.p95; disp.p99=run.latency.p99; disp.rate=sent?ok/sent*100:0;
+    $('kSent').textContent=sent; $('kFail').textContent=fail; $('kRps').textContent=disp.rps.toFixed(1);
+    $('kP95').textContent=run.latency.p95; $('kP99').textContent=run.latency.p99; $('kRate').textContent=sent?(ok/sent*100).toFixed(1):'—';
+    bumpVals.clientCount=null; bumpVals.serverCount=null; bumpCount('clientCount',launched); bumpCount('serverCount',sent);
+    $('fill').style.width='100%'; $('pc').textContent=`${sent} / ${total}`;
+    renderCodes(); drawSpark();
+    const list=$('streamList');
+    if (responses.length){ list.innerHTML=''; [...responses].reverse().forEach(addStreamRow); }
+    else list.innerHTML=`<div class="dock-empty">This saved run kept no response bodies.</div>`;
+    document.body.classList.remove('running','state-err'); document.body.classList.add('viewing');
+    $('stat').textContent='Viewing'; $('readout').textContent=`viewing saved run · ${new Date(run.endedAt).toLocaleString()}`;
+    $('viewExit').style.display=''; document.body.classList.add('dock-open'); $('streamBtn').classList.add('on');
     closeDrawer(); renderDrawer();
   }
-  function exitViewing() {
-    if (!viewing) return; viewing = null;
-    byId('viewBanner').classList.remove('show');
-    resetRun(0, null); render(true);
-    setStatus('Ready', ''); $$('[data-proglabel]').forEach(e => e.textContent = 'Ready');
-    byId('log').innerHTML = `<div class="empty"><span>Each response — time, code, latency — lists here as it arrives. Click a row for the full body.</span></div>`;
-    renderDrawer();
+  function exitViewing(){
+    if (!viewing) return; viewing=null;
+    document.body.classList.remove('viewing'); $('viewExit').style.display='none';
+    resetRun(0,null); renderTick(true); setRunState('idle');
+    $('streamList').innerHTML=`<div class="dock-empty">Responses stream here as requests resolve — click any row for the full request &amp; response body.</div>`;
+    $('streamCount').textContent='0'; renderDrawer();
   }
 
-  /* ---------- drawers / modal ---------- */
-  let openDrawerId = null;
-  function openDrawer(id) { byId(id).classList.add('show'); byId(id).setAttribute('aria-hidden', 'false'); byId('scrim').classList.add('show'); openDrawerId = id; }
-  function closeDrawer() { ['histDrawer', 'detDrawer'].forEach(d => { byId(d).classList.remove('show'); byId(d).setAttribute('aria-hidden', 'true'); }); byId('scrim').classList.remove('show'); openDrawerId = null; }
-  function openHistory() { renderDrawer(); openDrawer('histDrawer'); }
-  function openKeys() { byId('keysModal').classList.add('show'); }
-  function closeKeys() { byId('keysModal').classList.remove('show'); }
-
-  /* ---------- cURL ---------- */
-  function copyCurl() {
-    if (!validate()) { toast('Fix invalid fields first', 'err'); return; }
-    const cfg = buildRequest();
-    const hs = Object.entries(cfg.headers).map(([k, v]) => `  -H '${k}: ${String(v).replace(/'/g, "'\\''")}'`).join(' \\\n');
-    const data = cfg.body ? ` \\\n  -d '${cfg.body.replace(/'/g, "'\\''")}'` : '';
-    const curl = `curl -X ${cfg.method} '${cfg.url}' \\\n${hs}${data}`;
-    navigator.clipboard.writeText(curl).then(() => toast('cURL copied to clipboard', 'ok'), () => toast('Failed to copy', 'err'));
+  /* ===================== copy as cURL ===================== */
+  function copyCurl(){
+    if (!validate()){ toast('Fix the payload / URL first','err'); return; }
+    let cfg; try{ cfg=buildRequest(); }catch{ toast('Payload is not valid JSON','err'); return; }
+    const hs=Object.entries(cfg.headers).map(([k,v])=>`  -H '${k}: ${String(v).replace(/'/g,"'\\''")}'`).join(' \\\n');
+    const data=cfg.body?` \\\n  -d '${cfg.body.replace(/'/g,"'\\''")}'`:'';
+    navigator.clipboard.writeText(`curl -X ${cfg.method} '${cfg.url}' \\\n${hs}${data}`).then(()=>toast('cURL copied','ok'),()=>toast('Copy failed','err'));
   }
 
-  /* ---------- wiring ---------- */
-  $$('.pre[data-preset]').forEach(p => p.addEventListener('click', () => {
-    $$('.pre[data-preset]').forEach(x => x.classList.remove('on')); p.classList.add('on');
-    const v = PRESETS[p.dataset.preset];
-    byId('total').value = v.total; byId('rps').value = v.rps; byId('concurrency').value = v.concurrency;
-    ['total', 'rps', 'concurrency'].forEach(id => localStorage.setItem('jmetter.' + id, byId(id).value));
-  }));
-  $$('[data-tabhost]').forEach(host => host.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
-    host.querySelectorAll('.tab').forEach(t => t.classList.remove('on')); tab.classList.add('on');
-    host.querySelectorAll('.vp').forEach(v => v.classList.toggle('on', v.dataset.v === tab.dataset.tab));
-    requestAnimationFrame(() => { resizeAll(); drawAll(); });
-  })));
-  byId('log').addEventListener('click', e => { const row = e.target.closest('.lg'); if (row) openDetail(row.dataset.rid); });
-  byId('respFilter').addEventListener('input', e => { filterText = e.target.value; applyFilter(); });
-  byId('startBtn').addEventListener('click', start);
-  byId('stopBtn').addEventListener('click', stop);
-  byId('testBtn').addEventListener('click', probe);
-  byId('copyCurlBtn').addEventListener('click', copyCurl);
-  byId('historyBtn').addEventListener('click', openHistory);
-  byId('shortcutsBtn').addEventListener('click', openKeys);
-  byId('histClose').addEventListener('click', closeDrawer);
-  byId('detClose').addEventListener('click', closeDrawer);
-  byId('scrim').addEventListener('click', closeDrawer);
-  byId('exitViewBtn').addEventListener('click', exitViewing);
-  byId('keysModal').addEventListener('click', e => { if (e.target === byId('keysModal') || e.target.hasAttribute('data-close-keys') || e.target.closest('[data-close-keys]')) closeKeys(); });
-  byId('jwt').addEventListener('input', renderJwt);
-  ['payload', 'headers', 'url'].forEach(id => byId(id).addEventListener('input', validate));
+  /* ===================== JWT decode ===================== */
+  function decodeJwt(raw){
+    try { let t=raw.trim(); if(t.toLowerCase().startsWith('bearer ')) t=t.slice(7).trim(); if(!t) return null;
+      const parts=t.split('.'); if(parts.length<2) return {invalid:true};
+      const b64=parts[1].replace(/-/g,'+').replace(/_/g,'/'); const pad=b64+'='.repeat((4-b64.length%4)%4);
+      return { payload: JSON.parse(decodeURIComponent(escape(atob(pad)))) };
+    } catch { return {invalid:true}; }
+  }
+  function renderJwt(){
+    const el=$('jwtInfo'), raw=$('jwt').value;
+    if (!raw.trim()){ el.className='jwt-info'; el.innerHTML=''; return; }
+    const r=decodeJwt(raw);
+    if (!r||r.invalid){ el.className='jwt-info show err'; el.innerHTML=`<div class="who">Not a valid JWT</div><div class="jmeta">Couldn't decode the payload.</div>`; return; }
+    const p=r.payload, now=Date.now()/1000;
+    const who=p.name||p.preferred_username||p.email||p.sub||'Authenticated'; let bits=[], klass='ok';
+    if (p.exp){ const s=p.exp-now; if(s<=0){klass='err';bits.push('Expired '+Math.abs(Math.round(s/60))+'m ago');} else if(s<300){klass='warn';bits.push('Expires in '+Math.round(s/60)+'m');} else if(s<3600) bits.push('Expires in '+Math.round(s/60)+'m'); else bits.push('Expires in '+Math.round(s/3600)+'h'); }
+    if (p.iss){ try{ bits.push('iss: '+new URL(p.iss).hostname); }catch{ bits.push('iss: '+p.iss); } }
+    el.className='jwt-info show '+klass; el.innerHTML=`<div class="who">${escapeHtml(who)}</div><div class="jmeta">${bits.map(escapeHtml).join(' · ')}</div>`;
+  }
 
-  document.addEventListener('keydown', e => {
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    const tag = (e.target.tagName || '').toLowerCase(), inField = tag === 'input' || tag === 'textarea' || tag === 'select';
-    if (e.key === 'Escape') {
-      if (byId('keysModal').classList.contains('show')) { closeKeys(); return; }
-      if (openDrawerId) { closeDrawer(); return; }
-      if (running) { stop(); return; }
-      if (viewing) { exitViewing(); return; }
-      if (inField) e.target.blur();
-      return;
+  /* ===================== overlays ===================== */
+  let openDrawerId=null;
+  function openDrawer(id){ $(id).classList.add('show'); $(id).setAttribute('aria-hidden','false'); $('scrim').classList.add('show'); openDrawerId=id; }
+  function closeDrawer(){ ['histDrawer','detDrawer'].forEach(d=>{$(d).classList.remove('show');$(d).setAttribute('aria-hidden','true');}); $('scrim').classList.remove('show'); openDrawerId=null; }
+  function openHistory(){ renderDrawer(); openDrawer('histDrawer'); }
+  function openKeys(){ $('keysModal').classList.add('show'); }
+  function closeKeys(){ $('keysModal').classList.remove('show'); }
+  function toggleDock(force){ const open = force!=null ? force : !document.body.classList.contains('dock-open'); document.body.classList.toggle('dock-open',open); $('streamBtn').classList.toggle('on',open); }
+
+  /* toast */
+  const toastEl=$('toast'); let toastTimer;
+  function toast(msg,kind=''){ toastEl.textContent=msg; toastEl.className='toast show '+kind; clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2800); }
+
+  /* ===================== topology visualization ===================== */
+  const viewport=$('viewport'), world=$('world'), fx=$('fx'), ctx=fx.getContext('2d');
+  let pan={x:0,y:0}, zoom=1;
+  function applyView(){ world.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${zoom})`; }
+  applyView();
+  let dpr=1,W=0,H=0;
+  function resizeFx(){ const r=fx.getBoundingClientRect(); dpr=window.devicePixelRatio||1; W=r.width;H=r.height; fx.width=W*dpr;fx.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  window.addEventListener('resize',resizeFx); resizeFx();
+
+  let drag=null,panning=null;
+  $$('.nhead[data-drag]').forEach(h=>h.addEventListener('mousedown',e=>{ const node=h.closest('.node'); drag={node,sx:e.clientX,sy:e.clientY,ox:parseFloat(node.style.left),oy:parseFloat(node.style.top)}; e.preventDefault();e.stopPropagation(); }));
+  $$('.tnode').forEach(node=>node.addEventListener('mousedown',e=>{ drag={node,sx:e.clientX,sy:e.clientY,ox:parseFloat(node.style.left),oy:parseFloat(node.style.top)}; e.preventDefault();e.stopPropagation(); }));
+  viewport.addEventListener('mousedown',e=>{ if(e.target.closest('.node'))return; panning={sx:e.clientX,sy:e.clientY,ox:pan.x,oy:pan.y}; viewport.classList.add('panning'); });
+  window.addEventListener('mousemove',e=>{
+    if(drag){ drag.node.style.left=(drag.ox+(e.clientX-drag.sx)/zoom)+'px'; drag.node.style.top=(drag.oy+(e.clientY-drag.sy)/zoom)+'px'; }
+    else if(panning){ pan.x=panning.ox+(e.clientX-panning.sx); pan.y=panning.oy+(e.clientY-panning.sy); applyView(); }
+  });
+  window.addEventListener('mouseup',()=>{ drag=null;panning=null;viewport.classList.remove('panning'); });
+  viewport.addEventListener('wheel',e=>{ e.preventDefault(); const rect=viewport.getBoundingClientRect(); const mx=e.clientX-rect.left,my=e.clientY-rect.top; const wx=(mx-pan.x)/zoom,wy=(my-pan.y)/zoom; zoom=Math.max(0.5,Math.min(1.7,zoom*(e.deltaY<0?1.1:0.9))); pan.x=mx-wx*zoom;pan.y=my-wy*zoom; applyView(); },{passive:false});
+  function setZoom(z){ const rect=viewport.getBoundingClientRect(); const mx=rect.width/2,my=rect.height/2; const wx=(mx-pan.x)/zoom,wy=(my-pan.y)/zoom; zoom=Math.max(0.5,Math.min(1.7,z)); pan.x=mx-wx*zoom;pan.y=my-wy*zoom; applyView(); }
+  function fit(){
+    const nodes=[...world.querySelectorAll('.node')]; let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    nodes.forEach(n=>{const x=parseFloat(n.style.left),y=parseFloat(n.style.top),w=n.offsetWidth,h=n.offsetHeight; minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x+w);maxY=Math.max(maxY,y+h);});
+    const cw=maxX-minX,ch=maxY-minY,vw=viewport.clientWidth,vh=viewport.clientHeight;
+    const padL=24,padT=24,padR=vw>720?282:24,padB=24,availW=vw-padL-padR,availH=vh-padT-padB;
+    zoom=Math.max(0.55,Math.min(1.15,Math.min(availW/cw,availH/ch)));
+    pan.x=padL+(availW-cw*zoom)/2-minX*zoom; pan.y=padT+(availH-ch*zoom)/2-minY*zoom; applyView();
+  }
+  $('zIn').onclick=()=>setZoom(zoom*1.15); $('zOut').onclick=()=>setZoom(zoom*0.87); $('zFit').onclick=()=>fit();
+  function autofit(){ try{ fit(); }catch{} }
+  window.addEventListener('load',autofit); setTimeout(autofit,120); setTimeout(autofit,450);
+
+  const vpTop=()=>viewport.getBoundingClientRect().top;
+  function edge(id,side){ const r=$(id).getBoundingClientRect(),top=vpTop(),y=r.top-top+r.height/2; if(side==='r')return{x:r.right,y}; if(side==='l')return{x:r.left,y}; return{x:r.left+r.width/2,y}; }
+  function ring(id){ const el=$(id).querySelector('.ring'),r=el.getBoundingClientRect(),top=vpTop(); return{x:r.left+r.width/2,y:r.top-top+r.height/2,rad:r.width/2}; }
+  function qbez(a,b,c,t){const u=1-t;return{x:u*u*a.x+2*u*t*c.x+t*t*b.x,y:u*u*a.y+2*u*t*c.y+t*t*b.y};}
+  function wire(a,b,color,dash,off){ const dx=Math.max(36,(b.x-a.x)*0.5)*zoom; ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.bezierCurveTo(a.x+dx,a.y,b.x-dx,b.y,b.x,b.y); ctx.strokeStyle=color;ctx.lineWidth=2*zoom; if(dash){ctx.setLineDash([7*zoom,9*zoom]);ctx.lineDashOffset=off;}else ctx.setLineDash([]); ctx.stroke();ctx.setLineDash([]); }
+
+  let particles=[],clientPulse=0,serverPulse=0,flowOff=0,last=performance.now();
+  const REQCOL='#9fe8ff';
+  function spawnPacket(resp){ const color=resp.ok?COL.green:(resp.kind==='net'?COL.amber:COL.red); particles.push({p:0,dur:0.9+Math.random()*0.3,color,bounced:false}); if(particles.length>520)particles.splice(0,particles.length-520); }
+  function railArc(a,b,px,py,arc){ const c={x:(a.x+b.x)/2+px*arc,y:(a.y+b.y)/2+py*arc}; ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(c.x,c.y,b.x,b.y);ctx.stroke(); }
+  function pulse(n,color,p){ ctx.beginPath();ctx.arc(n.x,n.y,n.rad+(1-p)*26,0,6.29);ctx.strokeStyle=color;ctx.globalAlpha=p*.6;ctx.lineWidth=2*zoom;ctx.stroke();ctx.globalAlpha=1; }
+  function frame(now){
+    const dt=Math.min(0.05,(now-last)/1000); last=now; ctx.clearRect(0,0,W,H);
+    const isRun=document.body.classList.contains('running');
+    flowOff-=dt*60*zoom; if(flowOff<-1e6)flowOff=0;
+    const eng=edge('nEngine','r'), engL=edge('nEngine','l'), cl=ring('nClient'), sv=ring('nServer');
+    const clIn={x:cl.x-cl.rad,y:cl.y}, clOut={x:cl.x+cl.rad,y:cl.y}, svIn={x:sv.x-sv.rad,y:sv.y};
+    ['nTarget','nAuth','nPayload'].forEach(id=>wire(edge(id,'r'),engL,isRun?COL.flow:'rgba(255,255,255,.1)',isRun,flowOff));
+    wire(eng,clIn,isRun?COL.flow:'rgba(255,255,255,.1)',isRun,flowOff);
+    const dxL=svIn.x-clOut.x,dyL=svIn.y-clOut.y,L=Math.hypot(dxL,dyL)||1,ppx=-dyL/L,ppy=dxL/L,ARC=Math.min(58,L*0.2)*zoom;
+    ctx.setLineDash([]);ctx.lineCap='round';
+    ctx.strokeStyle='rgba(56,224,255,.12)';ctx.lineWidth=1.3;railArc(clOut,svIn,ppx,ppy,ARC);
+    ctx.strokeStyle='rgba(169,139,255,.12)';railArc(clOut,svIn,ppx,ppy,-ARC);
+    clientPulse=Math.max(0,clientPulse-dt*2.2); serverPulse=Math.max(0,serverPulse-dt*2.2);
+    for(let i=particles.length-1;i>=0;i--){
+      const pt=particles[i]; pt.p+=dt/pt.dur;
+      if(pt.p>=1){clientPulse=1;particles.splice(i,1);continue;}
+      let a,b,sign,t,color;
+      if(pt.p<0.5){ a=clOut;b=svIn;sign=1;t=pt.p*2;color=REQCOL; }
+      else { if(!pt.bounced){pt.bounced=true;serverPulse=1;} a=svIn;b=clOut;sign=-1;t=(pt.p-0.5)*2;color=pt.color; }
+      const ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      const ctrl={x:(a.x+b.x)/2+ppx*ARC*sign,y:(a.y+b.y)/2+ppy*ARC*sign};
+      const pos=qbez(a,b,ctrl,ease),tp=qbez(a,b,ctrl,Math.max(0,ease-0.13));
+      const grd=ctx.createLinearGradient(tp.x,tp.y,pos.x,pos.y);grd.addColorStop(0,color+'00');grd.addColorStop(1,color);
+      ctx.strokeStyle=grd;ctx.lineWidth=2.6*zoom;ctx.beginPath();ctx.moveTo(tp.x,tp.y);ctx.lineTo(pos.x,pos.y);ctx.stroke();
+      ctx.beginPath();ctx.arc(pos.x,pos.y,2.8*zoom,0,6.29);ctx.fillStyle='#eaffff';ctx.shadowBlur=11;ctx.shadowColor=color;ctx.fill();ctx.shadowBlur=0;
+      ctx.beginPath();ctx.arc(pos.x,pos.y,1.4*zoom,0,6.29);ctx.fillStyle=color;ctx.fill();
     }
-    if (mod && e.key === 'Enter') { e.preventDefault(); start(); return; }
-    if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); byId('respFilter').focus(); byId('respFilter').select(); return; }
-    if (mod && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openHistory(); return; }
-    if (mod && (e.key === 't' || e.key === 'T')) { e.preventDefault(); probe(); return; }
-    if (e.key === '?' && !inField) { e.preventDefault(); openKeys(); }
+    if(clientPulse>0)pulse(cl,COL.client,clientPulse);
+    if(serverPulse>0)pulse(sv,COL.server,serverPulse);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  const spark=$('spark'),sx=spark.getContext('2d');
+  function rszSpark(){ const r=spark.getBoundingClientRect(); if(!r.width)return; const d=window.devicePixelRatio||1; spark.width=r.width*d;spark.height=r.height*d; sx.setTransform(d,0,0,d,0,0); }
+  function drawSpark(){ const r=spark.getBoundingClientRect(),Wd=r.width,Hd=r.height; if(!Wd)return; sx.clearRect(0,0,Wd,Hd);
+    const s=series; if(s.length<2)return;
+    const pL=4,pR=4,pT=6,pB=6,cw=Wd-pL-pR,ch=Hd-pT-pB;
+    const mR=Math.max(1,arrMax(s.map(p=>p.rps)))*1.2,mL=Math.max(1,arrMax(s.map(p=>p.avgLatency)))*1.2;
+    const t0=s[0].t,tN=Math.max(s[s.length-1].t,t0+1),xA=t=>pL+((t-t0)/(tN-t0))*cw;
+    sx.beginPath();s.forEach((p,i)=>{const x=xA(p.t),y=pT+ch-(p.rps/mR)*ch;i?sx.lineTo(x,y):sx.moveTo(x,y);});
+    sx.lineTo(xA(s[s.length-1].t),pT+ch);sx.lineTo(xA(s[0].t),pT+ch);sx.closePath();
+    const g=sx.createLinearGradient(0,pT,0,pT+ch);g.addColorStop(0,'rgba(91,140,255,.35)');g.addColorStop(1,'rgba(91,140,255,0)');sx.fillStyle=g;sx.fill();
+    sx.strokeStyle='#5b8cff';sx.lineWidth=1.6;sx.lineJoin='round';sx.beginPath();s.forEach((p,i)=>{const x=xA(p.t),y=pT+ch-(p.rps/mR)*ch;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();
+    sx.strokeStyle='#ffc24b';sx.lineWidth=1.3;sx.beginPath();s.forEach((p,i)=>{const x=xA(p.t),y=pT+ch-(p.avgLatency/mL)*ch;i?sx.lineTo(x,y):sx.moveTo(x,y);});sx.stroke();
+  }
+  requestAnimationFrame(rszSpark); window.addEventListener('resize',()=>{rszSpark();drawSpark();});
+
+  function sample(){
+    const now=performance.now(),dt=(now-lastSampleAt)/1000; if(dt<=0)return;
+    const instRps=(sent-lastSent)/dt,st=stats();
+    series.push({ t:(now-startAt)/1000, rps:instRps, avgLatency:st.avg, p50:st.p50, p95:st.p95, p99:st.p99 });
+    if(series.length>400)series.shift(); lastSampleAt=now; lastSent=sent; drawSpark();
+  }
+
+  /* ===================== wiring ===================== */
+  $$('.pre[data-preset]').forEach(p=>p.addEventListener('click',()=>{
+    $$('.pre[data-preset]').forEach(x=>x.classList.remove('on')); p.classList.add('on');
+    const v=PRESETS[p.dataset.preset]; $('total').value=v.total; $('rps').value=v.rps; $('concurrency').value=v.concurrency; $('pc').textContent=`0 / ${v.total}`;
+    ['total','rps','concurrency'].forEach(id=>localStorage.setItem('jmetter.'+id,$(id).value));
+  }));
+  $('streamList').addEventListener('click',e=>{ const row=e.target.closest('.sr'); if(row) openDetail(row.dataset.rid); });
+  $('streamFilter').addEventListener('input',e=>{ filterText=e.target.value; applyFilter(); });
+  $('streamFilter').addEventListener('mousedown',e=>e.stopPropagation());
+  $('dockHead').addEventListener('click',e=>{ if(e.target.closest('.dh-filter'))return; toggleDock(); });
+  $('streamBtn').addEventListener('click',()=>toggleDock());
+  $('startBtn').addEventListener('click',start);
+  $('stopBtn').addEventListener('click',stop);
+  $('testBtn').addEventListener('click',probe);
+  $('copyCurlBtn').addEventListener('click',copyCurl);
+  $('historyBtn').addEventListener('click',openHistory);
+  $('shortcutsBtn').addEventListener('click',openKeys);
+  $('histClose').addEventListener('click',closeDrawer);
+  $('detClose').addEventListener('click',closeDrawer);
+  $('scrim').addEventListener('click',closeDrawer);
+  $('viewExit').addEventListener('click',exitViewing);
+  $('keysModal').addEventListener('click',e=>{ if(e.target===$('keysModal')||e.target.closest('[data-close-keys]')) closeKeys(); });
+  $('jwt').addEventListener('input',renderJwt);
+  ['payload','url'].forEach(id=>$(id).addEventListener('input',validate));
+
+  document.addEventListener('keydown',e=>{
+    const mod=isMac?e.metaKey:e.ctrlKey;
+    const tag=(e.target.tagName||'').toLowerCase(), inField=tag==='input'||tag==='textarea'||tag==='select';
+    if(e.key==='Escape'){ if($('keysModal').classList.contains('show')){closeKeys();return;} if(openDrawerId){closeDrawer();return;} if(running){stop();return;} if(viewing){exitViewing();return;} if(inField)e.target.blur(); return; }
+    if(mod&&e.key==='Enter'){ e.preventDefault(); start(); return; }
+    if(mod&&(e.key==='k'||e.key==='K')){ e.preventDefault(); toggleDock(true); $('streamFilter').focus(); $('streamFilter').select(); return; }
+    if(mod&&(e.key==='h'||e.key==='H')){ e.preventDefault(); openHistory(); return; }
+    if(mod&&(e.key==='t'||e.key==='T')){ e.preventDefault(); probe(); return; }
+    if(mod&&e.key==='0'){ e.preventDefault(); fit(); return; }
+    if(e.key==='?'&&!inField){ e.preventDefault(); openKeys(); }
   });
 
-  /* ---------- persistence ---------- */
-  for (const id of ['url', 'jwt', 'payload', 'headers', 'total', 'rps', 'concurrency', 'timeout', 'method']) {
-    const el = byId(id), k = 'jmetter.' + id, v = localStorage.getItem(k);
-    if (v !== null) el.value = v;
-    const save = () => localStorage.setItem(k, el.value);
-    el.addEventListener('input', save); el.addEventListener('change', save);
+  for(const id of ['url','jwt','payload','total','rps','concurrency','timeout','method']){
+    const el=$(id),k='jmetter.'+id,v=localStorage.getItem(k); if(v!==null)el.value=v;
+    const save=()=>localStorage.setItem(k,el.value); el.addEventListener('input',save); el.addEventListener('change',save);
   }
 
-  /* ---------- init ---------- */
-  window.addEventListener('resize', () => { resizeAll(); drawAll(); });
-  new ResizeObserver(() => { resizeAll(); drawAll(); }).observe(byId('cThr').closest('.low'));
-  requestAnimationFrame(() => { resizeAll(); drawAll(); });
-  renderJwt(); validate(); render(true); renderDrawer();
+  /* init */
+  renderJwt(); validate(); renderTick(true); renderDrawer();
+  toggleDock(true);
 })();
 </script>
 </body>
