@@ -1,1312 +1,408 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="color-scheme" content="dark light" />
-<title>Jmetter — Custody TX Load Tester</title>
+<meta name="color-scheme" content="light" />
+<title>Jmetter // Custody TX Load Tester</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* ====== Design tokens ====== */
-  :root[data-theme="dark"] {
-    --bg: #0a0e1a;
-    --bg-2: #0f1424;
-    --bg-3: #161c30;
-    --bg-4: #1e2640;
-    --bg-hover: #232b48;
-    --border: #232c46;
-    --border-hi: #38436a;
-    --text: #f1f5fb;
-    --text-mid: #b6c0d6;
-    --text-dim: #7782a0;
-    --accent: #6366f1;
-    --accent-2: #818cf8;
-    --accent-soft: rgba(99,102,241,0.14);
-    --purple: #a855f7;
-    --ok: #10b981;
-    --ok-soft: rgba(16,185,129,0.12);
-    --warn: #f59e0b;
-    --warn-soft: rgba(245,158,11,0.12);
-    --err: #f43f5e;
-    --err-soft: rgba(244,63,94,0.12);
-    --info: #38bdf8;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 14px rgba(0,0,0,0.35);
-    --shadow-lg: 0 16px 40px rgba(0,0,0,0.55);
-    --grid-line: #1e253d;
+  :root{
+    --paper:#f5f4f1;--card:#fbfaf8;--ink:#16150f;--ink2:#4a4942;--dim:#8c8a80;--faint:#b8b6ab;
+    --rule:#e2e0d8;--rule2:#d2d0c6;--red:#e23b1f;--ok:#1f7a3d;--warn:#c47b14;
+    --sans:"Space Grotesk",-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --ch-grid:#eae8e0;--ch-axis:#a8a69c;--ch-rps:#16150f;--ch-lat:#e23b1f;
+    --ch-p50:#9a988e;--ch-p95:#c47b14;--ch-p99:#e23b1f;--ch-ok:#1f7a3d;--ch-warn:#c47b14;--ch-err:#e23b1f;--ch-fill:rgba(20,21,15,.05);
   }
-  :root[data-theme="light"] {
-    --bg: #f6f8fc;
-    --bg-2: #ffffff;
-    --bg-3: #f1f4fb;
-    --bg-4: #e9eef7;
-    --bg-hover: #eef2fa;
-    --border: #e3e8f1;
-    --border-hi: #c8d1e2;
-    --text: #0f172a;
-    --text-mid: #475569;
-    --text-dim: #94a3b8;
-    --accent: #6366f1;
-    --accent-2: #4f46e5;
-    --accent-soft: rgba(99,102,241,0.10);
-    --purple: #9333ea;
-    --ok: #059669;
-    --ok-soft: rgba(5,150,105,0.10);
-    --warn: #d97706;
-    --warn-soft: rgba(217,119,6,0.10);
-    --err: #e11d48;
-    --err-soft: rgba(225,29,72,0.10);
-    --info: #0284c7;
-    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
-    --shadow-md: 0 4px 14px rgba(15,23,42,0.08);
-    --shadow-lg: 0 16px 40px rgba(15,23,42,0.14);
-    --grid-line: #e9eef7;
-  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--ink);color:var(--paper);}
+  ::-webkit-scrollbar{width:10px;height:10px;}::-webkit-scrollbar-thumb{background:var(--rule2);}::-webkit-scrollbar-track{background:transparent;}
+  button,input,select,textarea{font-family:inherit;}
+  code{font-family:var(--mono);font-size:.9em;color:var(--ink2);}
+  .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;}
 
-  :root {
-    --r-sm: 6px;
-    --r-md: 10px;
-    --r-lg: 14px;
-    --header-h: 60px;
-    --sidebar-w: 440px;
-    --sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  }
+  /* masthead */
+  .mast{display:grid;grid-template-columns:1fr auto;align-items:end;padding:20px 34px 15px;border-bottom:2px solid var(--ink);}
+  .mast h1{margin:0;font-size:38px;font-weight:700;letter-spacing:-2px;line-height:.9;}
+  .mast .meta{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:8px;display:flex;gap:18px;flex-wrap:wrap;}
+  .mast .meta b{color:var(--ink2);}
+  .mast .right{display:flex;flex-direction:column;align-items:flex-end;gap:9px;}
+  .mast-actions{display:flex;gap:8px;}
+  .mbtn{font-family:var(--sans);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--dim);background:transparent;border:1px solid var(--rule2);padding:6px 11px;cursor:pointer;transition:all .15s;border-radius:0;}
+  .mbtn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .mbtn .bdg{margin-left:6px;color:var(--red);font-weight:700;}
+  .mbtn:hover .bdg{color:var(--paper);}
+  .status{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--dim);}
+  .status .d{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--faint);}
+  body.running .status{color:var(--ok);} body.running .status .d{background:var(--ok);border-color:var(--ok);animation:pp 1.2s infinite;}
+  body.state-err .status{color:var(--red);} body.state-err .status .d{background:var(--red);border-color:var(--red);}
+  body.state-done .status{color:var(--ink);} body.state-done .status .d{background:var(--ink);border-color:var(--ink);}
+  @keyframes pp{50%{opacity:.3}}
+  .clock{font-family:var(--mono);font-size:12px;color:var(--dim);}
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    line-height: 1.5;
-    overflow: hidden;
-    transition: background 0.2s, color 0.2s;
-  }
-  code, kbd { font-family: var(--mono); font-size: 0.92em; }
-  code { color: var(--accent-2); }
-  kbd {
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    border-bottom-width: 2px;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-    color: var(--text-mid);
-  }
-  ::selection { background: var(--accent-soft); color: var(--text); }
+  .grid{display:grid;grid-template-columns:320px 1fr;min-height:0;overflow:hidden;}
+  .side{border-right:1px solid var(--rule);overflow-y:auto;padding:24px 28px;}
+  .knum{font-size:11px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .knum::after{content:"";flex:1;height:1px;background:var(--rule);}
+  .sec{margin-bottom:28px;}
+  .sec h3{font-size:18px;font-weight:600;letter-spacing:-.4px;margin:0 0 14px;}
+  label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:0 0 5px;}
+  label .opt{color:var(--faint);letter-spacing:.5px;text-transform:none;}
+  .fld{margin-bottom:16px;}
+  input,select,textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--rule2);color:var(--ink);padding:6px 0;font-family:var(--mono);font-size:13px;outline:none;border-radius:0;transition:border-color .2s;}
+  input:focus,select:focus,textarea:focus{border-bottom-color:var(--ink);}
+  input::placeholder,textarea::placeholder{color:var(--faint);}
+  input.bad{border-bottom-color:var(--red);}
+  select{cursor:pointer;appearance:none;}
+  textarea{resize:vertical;min-height:108px;line-height:1.6;font-size:12px;border:1px solid var(--rule2);padding:10px;}
+  textarea:focus{border-color:var(--ink);border-bottom-color:var(--ink);}
+  textarea.bad{border-color:var(--red);}
+  textarea.jwt{min-height:64px;font-size:11px;}
+  textarea.head{min-height:54px;}
+  .hint{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5;} .hint.bad{color:var(--red);}
+  .url-row{display:grid;grid-template-columns:78px 1fr;gap:12px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .presets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .pre{border:1px solid var(--rule2);padding:11px 12px;cursor:pointer;transition:all .15s;user-select:none;}
+  .pre:hover{border-color:var(--ink2);} .pre.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .pre .n{font-weight:600;font-size:14px;} .pre .d{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px;} .pre.on .d{color:var(--faint);}
 
-  .icon { width: 16px; height: 16px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
-  .icon-lg { width: 20px; height: 20px; }
-  .icon-xl { width: 28px; height: 28px; }
+  .jwt-info{margin-top:10px;border:1px solid var(--rule2);padding:9px 11px;font-size:12px;display:none;}
+  .jwt-info.show{display:block;}
+  .jwt-info.ok{border-color:var(--ok);} .jwt-info.warn{border-color:var(--warn);} .jwt-info.err{border-color:var(--red);}
+  .jwt-info .who{font-weight:600;}
+  .jwt-info .jmeta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;word-break:break-all;}
 
-  /* ====== Header ====== */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    background: var(--bg-2);
-    border-bottom: 1px solid var(--border);
-    height: var(--header-h);
-    gap: 16px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .logo {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    border-radius: 10px;
-    display: grid; place-items: center;
-    color: white;
-    box-shadow: 0 4px 14px rgba(99,102,241,0.4);
-    flex-shrink: 0;
-  }
-  .brand-text { min-width: 0; }
-  .brand h1 { font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.3px; }
-  .brand .tag { color: var(--text-dim); font-size: 11px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btns{display:flex;flex-direction:column;gap:9px;margin-top:4px;}
+  button{padding:13px 16px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:13px;letter-spacing:.5px;cursor:pointer;transition:all .15s;border-radius:0;}
+  button:hover:not(:disabled){background:var(--ink);color:var(--paper);} button:disabled{opacity:.3;cursor:not-allowed;}
+  button.go{background:var(--ink);color:var(--paper);} button.go:hover:not(:disabled){background:var(--red);border-color:var(--red);}
+  button.kill{border-color:var(--red);color:var(--red);} button.kill:hover:not(:disabled){background:var(--red);color:var(--paper);}
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .curl{padding:9px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid var(--rule2);color:var(--dim);background:transparent;}
+  .curl:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
-  .header-center { flex: 1; max-width: 480px; }
-  .search-box {
-    position: relative;
-    width: 100%;
-  }
-  .search-box .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
-  .search-box input {
-    width: 100%;
-    padding: 9px 12px 9px 38px;
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    outline: none;
-    transition: all 0.15s;
-  }
-  .search-box input:focus { border-color: var(--accent); background: var(--bg); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .search-box input::placeholder { color: var(--text-dim); }
-  .search-box .kbd-hint {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    font-family: var(--mono); font-size: 10px;
-    background: var(--bg-2); border: 1px solid var(--border);
-    padding: 2px 5px; border-radius: 4px;
-    color: var(--text-dim);
-    pointer-events: none;
-  }
+  /* main */
+  .main{display:grid;grid-template-rows:auto auto auto 1fr;min-height:0;overflow:hidden;}
+  .view-banner{display:none;align-items:center;justify-content:space-between;gap:14px;padding:10px 28px;background:var(--ink);color:var(--paper);font-size:12px;letter-spacing:.4px;}
+  .view-banner.show{display:flex;}
+  .view-banner b{font-weight:600;}
+  .view-banner button{background:transparent;border:1px solid var(--paper);color:var(--paper);padding:5px 11px;font-size:10px;letter-spacing:1px;text-transform:uppercase;}
+  .view-banner button:hover{background:var(--paper);color:var(--ink);}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--rule);}
+  .kpi{padding:16px 22px;border-right:1px solid var(--rule);min-width:0;}
+  .kpi:last-child{border-right:none;}
+  .kpi .k{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:11px;}
+  .kpi .v{font-size:32px;font-weight:600;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .kpi .u{font-size:14px;color:var(--dim);font-weight:400;}
+  .kpi.red .v{color:var(--red);} .kpi.ok .v{color:var(--ok);}
+  .prog{display:flex;align-items:center;gap:22px;padding:13px 28px;border-bottom:1px solid var(--rule);}
+  .prog .pl{font-size:13px;font-weight:600;white-space:nowrap;}
+  .prog .track{flex:1;height:2px;background:var(--rule2);position:relative;}
+  .prog .fill{position:absolute;top:-1px;bottom:-1px;left:0;width:0;background:var(--ink);transition:width .35s;}
+  body.state-err .prog .fill{background:var(--red);}
+  .prog .m{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;} .prog .m b{color:var(--ink);}
 
-  .header-right { display: flex; align-items: center; gap: 8px; }
+  .low{display:grid;grid-template-columns:1.5fr 1fr;min-height:0;overflow:hidden;}
+  .panel{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule);}
+  .panel:last-child{border-right:none;}
+  .tabs{display:flex;gap:22px;padding:0 24px;height:50px;align-items:center;border-bottom:1px solid var(--rule);}
+  .tab{font-size:13px;font-weight:500;color:var(--dim);cursor:pointer;padding:6px 0;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:inline-flex;gap:8px;align-items:center;user-select:none;}
+  .tab:hover{color:var(--ink);} .tab.on{color:var(--ink);border-bottom-color:var(--red);}
+  .tab .c{font-family:var(--mono);font-size:11px;color:var(--dim);}
+  .tab.on .c{color:var(--red);}
+  .codes{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:50%;}
+  .chip{font-family:var(--mono);font-size:11px;padding:2px 8px;border:1px solid var(--rule2);color:var(--dim);white-space:nowrap;}
+  .chip.s2{color:var(--ok);border-color:var(--ok);} .chip.s4,.chip.s5{color:var(--red);border-color:var(--red);} .chip.net{color:var(--warn);border-color:var(--warn);}
+  .pb{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;}
+  .vp{display:none;flex:1;min-height:0;flex-direction:column;} .vp.on{display:flex;}
+  .legend{display:flex;gap:22px;padding:12px 24px;font-size:11px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;}
+  .legend i{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:7px;}
+  .cw{flex:1;position:relative;padding:14px 20px;min-height:0;} canvas{width:100%;height:100%;display:block;}
 
-  .icon-btn {
-    width: 36px; height: 36px;
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    color: var(--text-mid);
-    border-radius: 8px;
-    cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: all 0.15s;
-    position: relative;
-  }
-  .icon-btn:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border-hi); }
-  .icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--accent); }
-  .icon-btn .badge {
-    position: absolute; top: -4px; right: -4px;
-    background: var(--accent);
-    color: white;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 999px;
-    min-width: 16px;
-    text-align: center;
-    border: 2px solid var(--bg-2);
-    line-height: 1.2;
-  }
-  .icon-btn .badge:empty { display: none; }
+  .resp-tools{padding:9px 20px;border-bottom:1px solid var(--rule);}
+  .resp-tools input{border:1px solid var(--rule2);padding:7px 11px;font-size:12px;}
+  .resp-tools input:focus{border-color:var(--ink);}
+  .log{flex:1;overflow-y:auto;min-height:0;}
+  .lg{display:grid;grid-template-columns:74px 46px 50px 1fr;gap:12px;padding:9px 24px;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:12px;align-items:baseline;white-space:nowrap;overflow:hidden;cursor:pointer;transition:background .12s;}
+  .lg:hover{background:var(--card);}
+  .lg.hide{display:none;}
+  .lg .lg-ts{color:var(--faint);} .lg .lg-id{color:var(--dim);} .lg .lg-co{font-weight:500;}
+  .lg .lg-co.s2{color:var(--ok);} .lg .lg-co.s4,.lg .lg-co.s5{color:var(--red);} .lg .lg-co.net{color:var(--warn);}
+  .lg .lg-m{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;}
 
-  .status-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 7px 14px; border-radius: 999px;
-    background: var(--bg-3); border: 1px solid var(--border);
-    font-size: 12px; font-weight: 600;
-    color: var(--text-mid);
-    transition: all 0.2s;
-    height: 36px;
-  }
-  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); }
-  .status-pill.running .dot { background: var(--ok); box-shadow: 0 0 12px var(--ok); animation: pulse 1.2s infinite; }
-  .status-pill.running { color: var(--ok); border-color: rgba(16,185,129,0.4); background: var(--ok-soft); }
-  .status-pill.done { color: var(--accent-2); border-color: rgba(129,140,248,0.4); background: var(--accent-soft); }
-  .status-pill.done .dot { background: var(--accent-2); }
-  .status-pill.error { color: var(--err); border-color: rgba(244,63,94,0.4); background: var(--err-soft); }
-  .status-pill.error .dot { background: var(--err); }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .errs{flex:1;overflow-y:auto;min-height:0;padding:16px 20px;}
+  .err-card{border:1px solid var(--rule2);border-left:2px solid var(--red);padding:12px 14px;margin-bottom:10px;}
+  .err-card.warn{border-left-color:var(--warn);}
+  .ec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .ec-code{font-family:var(--mono);font-weight:600;color:var(--red);font-size:13px;} .err-card.warn .ec-code{color:var(--warn);}
+  .ec-n{font-size:11px;color:var(--dim);}
+  .ec-s{font-family:var(--mono);font-size:11px;color:var(--ink2);background:var(--card);padding:8px 10px;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:auto;}
 
-  /* ====== Layout ====== */
-  main {
-    display: grid;
-    grid-template-columns: var(--sidebar-w) 1fr;
-    height: calc(100vh - var(--header-h));
-    transition: grid-template-columns 0.25s ease;
-  }
-  body.sidebar-collapsed main { grid-template-columns: 0 1fr; }
-  body.sidebar-collapsed .sidebar { transform: translateX(-100%); opacity: 0; }
-  body.sidebar-collapsed .workspace { padding-left: 52px; }
+  .sum{flex:1;overflow-y:auto;min-height:0;padding:8px 28px 22px;}
+  .sum-h{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin:20px 0 4px;}
+  .sum-h:first-child{margin-top:8px;}
+  .sum-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--rule);}
+  .sum-k{color:var(--ink2);} .sum-v{font-family:var(--mono);font-weight:500;} .sum-v.ok{color:var(--ok);} .sum-v.err{color:var(--red);}
 
-  .sidebar {
-    background: var(--bg-2);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 24px;
-    position: relative;
-    transition: transform 0.25s ease, opacity 0.25s;
-  }
-  .workspace {
-    display: grid;
-    grid-template-rows: auto auto auto 1fr;
-    overflow: hidden;
-    min-width: 0;
-    position: relative;
-  }
+  .empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:13px;padding:30px;text-align:center;line-height:1.6;}
+  .empty span{max-width:340px;}
 
-  /* ====== Sidebar form ====== */
-  .section { margin-bottom: 26px; }
-  .section-title {
-    display: flex; align-items: center; gap: 9px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0 0 4px;
-  }
-  .section-title .num {
-    width: 22px; height: 22px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-radius: 7px;
-    display: grid; place-items: center;
-    font-size: 11px; font-weight: 800;
-  }
-  .section-sub { font-size: 12px; color: var(--text-dim); margin: 0 0 12px 31px; }
+  /* overlays — light ink scrim, NO full-screen blur */
+  .scrim{position:fixed;inset:0;background:rgba(22,21,15,.32);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .scrim.show{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:var(--paper);border-left:2px solid var(--ink);z-index:61;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+  .drawer.show{transform:none;}
+  .drawer-head{padding:20px 24px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+  .drawer-head h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.6px;}
+  .drawer-head .sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:5px;}
+  .drawer-body{flex:1;overflow-y:auto;padding:18px 24px 24px;}
+  .xbtn{background:transparent;border:1px solid var(--rule2);width:30px;height:30px;padding:0;font-size:15px;line-height:1;color:var(--dim);cursor:pointer;flex-shrink:0;}
+  .xbtn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
-  .field { margin-bottom: 14px; }
-  label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-mid);
-    margin: 0 0 6px;
-  }
-  .hint { font-size: 11px; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
-  .hint.err { color: var(--err); }
+  .run-card{border:1px solid var(--rule2);padding:14px 16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s;position:relative;}
+  .run-card:hover{border-color:var(--ink2);}
+  .run-card.viewing{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);}
+  .run-card.pinned{border-left:3px solid var(--ink);}
+  .rc-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .rc-title{font-weight:600;font-size:14px;}
+  .rc-time{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:3px;}
+  .rc-badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:3px 8px;border:1px solid;height:fit-content;white-space:nowrap;}
+  .rc-badge.ok{color:var(--ok);border-color:var(--ok);} .rc-badge.err{color:var(--red);border-color:var(--red);} .rc-badge.mix{color:var(--warn);border-color:var(--warn);}
+  .rc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+  .rc-stats .l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);}
+  .rc-stats .v{font-family:var(--mono);font-size:13px;font-weight:500;margin-top:2px;}
+  .rc-actions{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--rule);}
+  .rc-actions button{flex:1;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:7px 4px;border:1px solid var(--rule2);background:transparent;color:var(--dim);}
+  .rc-actions button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .rc-actions button.del:hover{background:var(--red);border-color:var(--red);color:var(--paper);}
 
-  input, textarea, select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 12px;
-    border-radius: var(--r-sm);
-    font-family: var(--mono);
-    font-size: 12px;
-    outline: none;
-    transition: all 0.15s;
-  }
-  input::placeholder, textarea::placeholder { color: var(--text-dim); }
-  input:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-  input.invalid, textarea.invalid { border-color: var(--err); box-shadow: 0 0 0 3px var(--err-soft); }
-  textarea { resize: vertical; min-height: 92px; line-height: 1.55; }
-  textarea.payload { min-height: 200px; }
-  textarea.jwt { min-height: 76px; font-size: 11px; }
-  select {
-    appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237782a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-  }
+  .det-sec{margin-bottom:22px;}
+  .det-h{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin:0 0 10px;}
+  .det-row{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:13px;}
+  .det-row .k{color:var(--ink2);white-space:nowrap;} .det-row .v{font-family:var(--mono);font-weight:500;text-align:right;word-break:break-all;}
+  .det-body{font-family:var(--mono);font-size:12px;line-height:1.6;background:var(--card);border:1px solid var(--rule);padding:12px;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto;}
+  .det-empty{color:var(--faint);font-style:italic;}
 
-  .row { display: grid; gap: 10px; }
-  .row-2 { grid-template-columns: 1fr 1fr; }
-  .url-row { display: grid; grid-template-columns: 100px 1fr; gap: 8px; }
+  .modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(22,21,15,.32);}
+  .modal.show{display:flex;}
+  .modal-box{background:var(--paper);border:2px solid var(--ink);width:100%;max-width:460px;max-height:calc(100vh - 80px);overflow:hidden;display:flex;flex-direction:column;}
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
+  .modal-head h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.5px;}
+  .modal-body{padding:6px 22px 16px;overflow-y:auto;}
+  .sc-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px;}
+  .sc-row:last-child{border-bottom:none;}
+  .sc-row .desc{color:var(--ink2);} .sc-row .keys{display:flex;gap:5px;}
+  kbd{font-family:var(--mono);font-size:11px;background:var(--card);border:1px solid var(--rule2);border-bottom-width:2px;padding:2px 7px;color:var(--ink2);}
 
-  /* JWT info */
-  .jwt-info {
-    margin-top: 8px;
-    padding: 11px 13px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    font-size: 12px;
-    display: none;
-  }
-  .jwt-info.show { display: flex; gap: 11px; align-items: flex-start; }
-  .jwt-info.ok { border-color: rgba(16,185,129,0.4); background: var(--ok-soft); }
-  .jwt-info.warn { border-color: rgba(245,158,11,0.4); background: var(--warn-soft); }
-  .jwt-info.err { border-color: rgba(244,63,94,0.4); background: var(--err-soft); }
-  .jwt-info .icon { color: var(--ok); margin-top: 1px; }
-  .jwt-info.warn .icon { color: var(--warn); }
-  .jwt-info.err .icon { color: var(--err); }
-  .jwt-info .body { min-width: 0; flex: 1; }
-  .jwt-info .who { color: var(--text); font-weight: 600; }
-  .jwt-info .meta { color: var(--text-dim); font-size: 11px; margin-top: 3px; word-break: break-word; }
-
-  /* Presets */
-  .presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
-  .preset {
-    padding: 10px 6px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
-    user-select: none;
-  }
-  .preset:hover { border-color: var(--border-hi); background: var(--bg-hover); transform: translateY(-1px); }
-  .preset.active { border-color: var(--accent); background: var(--accent-soft); }
-  .preset .name { font-size: 12px; font-weight: 700; color: var(--text); }
-  .preset .desc { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-
-  /* Action bar (sticky) */
-  .actions {
-    position: sticky; bottom: -24px;
-    margin: 24px -24px -24px;
-    padding: 18px 24px;
-    background: linear-gradient(to top, var(--bg-2) 80%, transparent);
-    display: flex; gap: 10px;
-    z-index: 5;
-  }
-  button {
-    padding: 11px 16px;
-    border-radius: var(--r-sm);
-    border: 1px solid var(--border);
-    background: var(--bg-3);
-    color: var(--text);
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: var(--sans);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    line-height: 1;
-  }
-  button:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-hi); }
-  button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--accent); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button.primary {
-    flex: 1;
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.4);
-  }
-  button.primary:hover:not(:disabled) {
-    background: var(--accent-2);
-    border-color: var(--accent-2);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(99,102,241,0.5);
-  }
-  button.primary:active:not(:disabled) { transform: translateY(0); }
-  button.ghost { background: transparent; }
-  button.danger { background: transparent; border-color: rgba(244,63,94,0.5); color: var(--err); }
-  button.danger:hover:not(:disabled) { background: var(--err); color: white; border-color: var(--err); }
-  button.tiny { padding: 6px 10px; font-size: 11px; border-radius: 5px; }
-
-  /* ====== Viewing banner ====== */
-  .viewing-banner {
-    display: none;
-    align-items: center; justify-content: space-between;
-    padding: 11px 28px;
-    background: var(--accent-soft);
-    border-bottom: 1px solid rgba(99,102,241,0.3);
-    font-size: 12px;
-    color: var(--accent-2);
-    gap: 12px;
-  }
-  .viewing-banner.show { display: flex; }
-  .viewing-banner .left { display: flex; align-items: center; gap: 10px; }
-
-  /* ====== Progress ====== */
-  .progress-wrap {
-    padding: 18px 28px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-2);
-  }
-  .progress-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 13px; gap: 16px;
-  }
-  .progress-title { font-size: 14px; font-weight: 700; color: var(--text); }
-  .progress-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-  .progress-meta { display: flex; gap: 18px; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
-  .progress-meta .val { color: var(--text); font-weight: 700; font-family: var(--mono); }
-  .progress-bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--purple));
-    width: 0%;
-    transition: width 0.3s;
-    border-radius: 4px;
-    position: relative;
-  }
-  .progress-fill::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 2s infinite;
-    border-radius: 4px;
-  }
-  body:not(.is-running) .progress-fill::after { display: none; }
-  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-  /* ====== KPI strip ====== */
-  .kpis {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-    padding: 18px 28px;
-    border-bottom: 1px solid var(--border);
-  }
-  .kpi {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    padding: 13px 15px;
-    transition: all 0.15s;
-    position: relative;
-    overflow: hidden;
-  }
-  .kpi:hover { border-color: var(--border-hi); transform: translateY(-1px); }
-  .kpi .label { font-size: 10px; color: var(--text-dim); font-weight: 700; margin: 0 0 7px; text-transform: uppercase; letter-spacing: 0.7px; }
-  .kpi .value { font-size: 22px; font-weight: 700; font-family: var(--mono); color: var(--text); line-height: 1; letter-spacing: -0.5px; }
-  .kpi .unit { font-size: 11px; color: var(--text-dim); font-weight: 500; margin-left: 3px; }
-  .kpi.ok .value { color: var(--ok); }
-  .kpi.err .value { color: var(--err); }
-  .kpi.accent .value { color: var(--accent-2); }
-
-  /* Success rate has a tiny bar at bottom */
-  .kpi.success-bar::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0;
-    height: 3px;
-    width: var(--rate, 0%);
-    background: linear-gradient(90deg, var(--ok), var(--accent-2));
-    transition: width 0.4s;
-    border-radius: 0 3px 3px 0;
-  }
-
-  /* ====== Bottom (resizable split) ====== */
-  .bottom {
-    display: grid;
-    grid-template-columns: 1.25fr 6px 1fr;
-    overflow: hidden;
-    min-height: 0;
-  }
-  .splitter {
-    background: var(--border);
-    cursor: col-resize;
-    position: relative;
-    transition: background 0.15s;
-  }
-  .splitter:hover, .splitter.drag { background: var(--accent); }
-  .splitter::after {
-    content: '';
-    position: absolute;
-    left: 50%; top: 50%;
-    width: 2px; height: 32px;
-    background: var(--text-dim);
-    border-radius: 1px;
-    transform: translate(-50%, -50%);
-    opacity: 0.6;
-  }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-    min-height: 0;
-    background: var(--bg);
-  }
-  .panel-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px;
-    background: var(--bg-2);
-    border-bottom: 1px solid var(--border);
-    min-height: 48px;
-    gap: 14px;
-  }
-
-  /* Tabs */
-  .tabs { display: flex; gap: 2px; height: 100%; align-items: stretch; }
-  .tab {
-    padding: 0 14px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-dim);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    display: inline-flex; align-items: center; gap: 7px;
-    user-select: none;
-  }
-  .tab:hover { color: var(--text-mid); }
-  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
-  .tab svg { color: inherit; }
-  .tab .count {
-    background: var(--bg-3);
-    color: var(--text-dim);
-    font-size: 10px;
-    padding: 1px 7px;
-    border-radius: 999px;
-    font-weight: 700;
-    min-width: 18px;
-    text-align: center;
-  }
-  .tab.active .count { background: var(--accent-soft); color: var(--accent); }
-
-  .panel-body { flex: 1; overflow: hidden; min-height: 0; position: relative; display: flex; flex-direction: column; }
-  .tab-panel { display: none; flex: 1; flex-direction: column; min-height: 0; }
-  .tab-panel.active { display: flex; }
-
-  /* Chart */
-  .chart-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 20px;
-    background: transparent;
-    border-bottom: 1px solid var(--border);
-  }
-  .chart-legend { display: flex; gap: 16px; font-size: 11px; color: var(--text-dim); }
-  .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .sw { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
-  .chart-wrap { flex: 1; position: relative; padding: 14px; min-height: 0; min-width: 0; }
-  canvas { width: 100%; height: 100%; display: block; }
-
-  /* Chart tooltip */
-  .ct {
-    position: absolute;
-    background: var(--bg-2);
-    border: 1px solid var(--border-hi);
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: 11px;
-    color: var(--text);
-    pointer-events: none;
-    box-shadow: var(--shadow-md);
-    display: none;
-    min-width: 130px;
-    z-index: 10;
-  }
-  .ct.show { display: block; }
-  .ct .ct-time { color: var(--text-dim); font-family: var(--mono); margin-bottom: 4px; font-size: 10px; }
-  .ct .ct-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
-  .ct .ct-row .k { color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
-  .ct .ct-row .v { font-family: var(--mono); font-weight: 700; }
-
-  /* Empty states */
-  .empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    text-align: center;
-    color: var(--text-dim);
-  }
-  .empty .icon-wrap {
-    width: 60px; height: 60px;
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    display: grid; place-items: center;
-    margin-bottom: 16px;
-    color: var(--accent);
-  }
-  .empty .icon-wrap .icon { width: 28px; height: 28px; }
-  .empty .t { font-size: 14px; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
-  .empty .d { font-size: 12px; max-width: 300px; line-height: 1.55; }
-
-  /* Log */
-  .log-toolbar {
-    display: flex; gap: 8px; align-items: center;
-    padding: 10px 16px;
-    background: transparent;
-    border-bottom: 1px solid var(--border);
-  }
-  .log-toolbar .search-box { flex: 1; }
-  .log-toolbar .search-box input { padding: 7px 10px 7px 34px; font-size: 12px; }
-  .log-toolbar .search-box .icon { left: 10px; width: 14px; height: 14px; }
-  .log {
-    flex: 1;
-    overflow-y: auto;
-    padding: 4px 0;
-    font-family: var(--mono);
-    font-size: 11px;
-    min-height: 0;
-  }
-  .log-line {
-    padding: 7px 20px;
-    display: grid;
-    grid-template-columns: 70px 50px 56px 1fr;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    white-space: nowrap;
-    overflow: hidden;
-    transition: background 0.1s;
-  }
-  :root[data-theme="light"] .log-line { border-bottom-color: rgba(15,23,42,0.04); }
-  .log-line:hover { background: var(--bg-3); }
-  .log-line.hidden { display: none; }
-  .log-line .ts { color: var(--text-dim); }
-  .log-line .id { color: var(--text-dim); }
-  .log-line .code {
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 10px;
-  }
-  .log-line .code.s2 { color: var(--ok); background: var(--ok-soft); }
-  .log-line .code.s4, .log-line .code.s5 { color: var(--err); background: var(--err-soft); }
-  .log-line .code.net { color: var(--warn); background: var(--warn-soft); }
-  .log-line .msg { color: var(--text-mid); text-overflow: ellipsis; overflow: hidden; }
-
-  /* Summary */
-  .summary { padding: 22px 26px; display: grid; gap: 22px; overflow-y: auto; }
-  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .summary-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 11px 14px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    font-size: 13px;
-    transition: border-color 0.15s;
-  }
-  .summary-row:hover { border-color: var(--border-hi); }
-  .summary-row .k { color: var(--text-dim); }
-  .summary-row .v { color: var(--text); font-weight: 700; font-family: var(--mono); }
-  .summary h3 {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-dim);
-    margin: 0 0 10px;
-    font-weight: 700;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  /* Errors */
-  .errors { padding: 16px 20px; overflow-y: auto; flex: 1; }
-  .err-card {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--err);
-    border-radius: var(--r-sm);
-    padding: 13px 15px;
-    margin-bottom: 10px;
-  }
-  .err-card.warn { border-left-color: var(--warn); }
-  .err-card-head {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 8px;
-  }
-  .err-card-code { font-family: var(--mono); font-weight: 700; color: var(--err); font-size: 13px; }
-  .err-card.warn .err-card-code { color: var(--warn); }
-  .err-card-count { font-size: 11px; color: var(--text-dim); font-weight: 600; }
-  .err-card-sample {
-    font-family: var(--mono); font-size: 11px; color: var(--text-mid);
-    background: var(--bg); padding: 9px 11px; border-radius: 5px;
-    max-height: 90px; overflow: auto; white-space: pre-wrap; word-break: break-all;
-  }
-
-  /* Scrollbars */
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
-
-  /* Status chips */
-  .status-codes { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    font-weight: 600;
-  }
-  .chip.s2 { color: var(--ok); border-color: rgba(16,185,129,0.4); background: var(--ok-soft); }
-  .chip.s4, .chip.s5 { color: var(--err); border-color: rgba(244,63,94,0.4); background: var(--err-soft); }
-  .chip.net { color: var(--warn); border-color: rgba(245,158,11,0.4); background: var(--warn-soft); }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px; right: 24px;
-    background: var(--bg-2);
-    border: 1px solid var(--border-hi);
-    color: var(--text);
-    padding: 13px 16px;
-    border-radius: var(--r-md);
-    font-size: 13px;
-    box-shadow: var(--shadow-lg);
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.25s;
-    pointer-events: none;
-    z-index: 200;
-    max-width: 380px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast .icon { flex-shrink: 0; }
-  .toast.ok { border-color: rgba(16,185,129,0.5); }
-  .toast.ok .icon { color: var(--ok); }
-  .toast.err { border-color: rgba(244,63,94,0.5); }
-  .toast.err .icon { color: var(--err); }
-  .toast.info .icon { color: var(--info); }
-
-  /* Drawer */
-  .backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.55);
-    z-index: 90;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.2s;
-    backdrop-filter: blur(2px);
-  }
-  .backdrop.show { opacity: 1; pointer-events: auto; }
-  .drawer {
-    position: fixed;
-    top: 0; right: 0; bottom: 0;
-    width: 500px;
-    max-width: 100vw;
-    background: var(--bg-2);
-    border-left: 1px solid var(--border);
-    z-index: 91;
-    display: flex; flex-direction: column;
-    transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-lg);
-  }
-  .drawer.show { transform: translateX(0); }
-  .drawer-head {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: 16px;
-  }
-  .drawer-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
-  .drawer-head .sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
-  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 24px 24px; }
-  .drawer-empty {
-    text-align: center;
-    color: var(--text-dim);
-    padding: 70px 20px;
-  }
-  .drawer-empty .icon-wrap {
-    width: 64px; height: 64px;
-    margin: 0 auto 16px;
-    background: var(--bg-3);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    display: grid; place-items: center;
-    color: var(--accent);
-  }
-  .drawer-empty .icon-wrap .icon { width: 28px; height: 28px; }
-  .drawer-empty .t { font-size: 14px; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
-  .drawer-empty .d { font-size: 12px; max-width: 280px; margin: 0 auto; line-height: 1.5; }
-
-  .run-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-    position: relative;
-  }
-  .run-card:hover { border-color: var(--accent); background: var(--bg-3); transform: translateY(-1px); }
-  .run-card.viewing { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .run-card.pinned::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: -1px;
-    width: 0; height: 0;
-    border-style: solid;
-    border-width: 14px 14px 0 0;
-    border-color: var(--accent) transparent transparent transparent;
-    border-top-left-radius: var(--r-md);
-  }
-  .run-card-head {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 11px;
-    gap: 10px;
-  }
-  .run-card-title { font-size: 13px; font-weight: 700; color: var(--text); }
-  .run-card-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
-  .run-card-badge {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    padding: 3px 9px; border-radius: 999px;
-    flex-shrink: 0;
-  }
-  .run-card-badge.ok { background: var(--ok-soft); color: var(--ok); }
-  .run-card-badge.err { background: var(--err-soft); color: var(--err); }
-  .run-card-badge.mix { background: var(--warn-soft); color: var(--warn); }
-  .run-card-stats {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-    font-size: 11px;
-    margin-bottom: 10px;
-  }
-  .run-card-stats div { display: flex; flex-direction: column; gap: 3px; }
-  .run-card-stats .lbl { color: var(--text-dim); font-size: 10px; text-transform: uppercase; font-weight: 600; }
-  .run-card-stats .vv { color: var(--text); font-weight: 700; font-family: var(--mono); }
-  .run-card-actions {
-    display: flex; gap: 4px;
-    padding-top: 9px;
-    border-top: 1px solid var(--border);
-  }
-  .run-card-actions button {
-    flex: 1;
-    padding: 6px 8px;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-dim);
-    font-size: 11px;
-    border-radius: 5px;
-  }
-  .run-card-actions button:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border); }
-  .run-card-actions button.danger:hover { color: var(--err); border-color: rgba(244,63,94,0.4); }
-
-  /* Modal (shortcuts help) */
-  .modal {
-    position: fixed; inset: 0;
-    z-index: 95;
-    display: none;
-    align-items: center; justify-content: center;
-    padding: 20px;
-  }
-  .modal.show { display: flex; }
-  .modal-box {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 480px;
-    max-height: calc(100vh - 80px);
-    overflow: hidden;
-    display: flex; flex-direction: column;
-    animation: modalIn 0.2s;
-  }
-  @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-  .modal-head {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .modal-head h2 { margin: 0; font-size: 15px; font-weight: 700; }
-  .modal-body { padding: 18px 22px; overflow-y: auto; }
-  .shortcut-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 9px 0;
-    font-size: 13px;
-  }
-  .shortcut-row + .shortcut-row { border-top: 1px solid var(--border); }
-  .shortcut-row .desc { color: var(--text-mid); }
-  .shortcut-row .keys { display: flex; gap: 4px; }
-
-  /* Sidebar collapse button - floating */
-  .sidebar-toggle {
-    position: fixed;
-    top: calc(var(--header-h) + 16px);
-    left: calc(var(--sidebar-w) - 14px);
-    z-index: 50;
-    width: 28px; height: 28px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: grid; place-items: center;
-    transition: all 0.25s;
-    box-shadow: var(--shadow-sm);
-  }
-  .sidebar-toggle:hover { color: var(--text); border-color: var(--accent); }
-  body.sidebar-collapsed .sidebar-toggle { left: 14px; transform: rotate(180deg); }
-
-  /* Theme switch animation */
-  html { transition: color 0.2s; }
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:var(--paper);padding:12px 16px;font-size:13px;max-width:360px;z-index:200;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none;}
+  .toast.show{opacity:1;transform:none;}
+  .toast.err{background:var(--red);} .toast.ok{background:var(--ok);}
 </style>
 </head>
-<body>
-
-<!-- ====== SVG Icon Sprite ====== -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
-    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
-    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
-    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></symbol>
-    <symbol id="i-stop" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="1"/></symbol>
-    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/><path d="M22 2 11 13"/></symbol>
-    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
-    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
-    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
-    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
-    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
-    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
-    <symbol id="i-rerun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 17 .01 0"/><path d="M12 17v5"/><path d="M9 10.76V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4.76a2 2 0 0 0 .57 1.4l3.43 3.84a2 2 0 0 1-1.45 3.4H6.45a2 2 0 0 1-1.45-3.4l3.43-3.84A2 2 0 0 0 9 10.76Z"/></symbol>
-    <symbol id="i-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
-    <symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" ry="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></symbol>
-    <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
-    <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
-    <symbol id="i-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-3"/><path d="M11 16v-7"/><path d="M15 16v-5"/><path d="M19 16v-9"/></symbol>
-    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
-    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
-    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
-    <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.5 4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></symbol>
-    <symbol id="i-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
-    <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
-    <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
-  </defs>
-</svg>
-
-<header>
-  <div class="brand">
-    <div class="logo"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
-    <div class="brand-text">
+<body data-chart="flat">
+<div class="app">
+  <div class="mast">
+    <div>
       <h1>Jmetter</h1>
-      <div class="tag">Custody Transaction Load Tester</div>
+      <div class="meta"><span>Custody Transaction Load Tester</span><span>Vol. <b>02</b></span><span>Edition — <b>Swiss</b></span></div>
+    </div>
+    <div class="right">
+      <div class="mast-actions">
+        <button class="mbtn" id="historyBtn" title="Run history (⌘H)">History<span class="bdg" id="histBadge"></span></button>
+        <button class="mbtn" id="shortcutsBtn" title="Keyboard shortcuts (?)">Keys</button>
+      </div>
+      <div class="status"><span class="d"></span><span data-status>Ready</span></div>
+      <div class="clock" data-clock>--:--:--</div>
     </div>
   </div>
-  <div class="header-center">
-    <div class="search-box">
-      <svg class="icon"><use href="#i-search"/></svg>
-      <input id="globalSearch" placeholder="Search responses…" />
-      <span class="kbd-hint" id="searchKbd">⌘K</span>
-    </div>
-  </div>
-  <div class="header-right">
-    <button id="shortcutsBtn" class="icon-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
-      <svg class="icon"><use href="#i-keyboard"/></svg>
-    </button>
-    <button id="themeBtn" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
-      <svg class="icon" id="themeIcon"><use href="#i-sun"/></svg>
-    </button>
-    <button id="historyBtn" class="icon-btn" title="Run history" aria-label="Run history">
-      <svg class="icon"><use href="#i-history"/></svg>
-      <span class="badge" id="historyBadge"></span>
-    </button>
-    <div id="statusPill" class="status-pill"><span class="dot"></span><span id="statusText">Ready</span></div>
-  </div>
-</header>
 
-<button id="sidebarToggle" class="sidebar-toggle" title="Toggle sidebar (⌘B)" aria-label="Toggle sidebar">
-  <svg class="icon" style="width:14px;height:14px;"><use href="#i-sidebar"/></svg>
-</button>
-
-<main>
-  <aside class="sidebar">
-    <div class="section">
-      <div class="section-title"><span class="num">1</span><svg class="icon"><use href="#i-target"/></svg> Target</div>
-      <p class="section-sub">Where Jmetter sends each request.</p>
-      <div class="field">
-        <label>Endpoint URL</label>
-        <div class="url-row">
-          <select id="method">
-            <option>POST</option><option>PUT</option><option>PATCH</option><option>GET</option><option>DELETE</option>
-          </select>
-          <input id="url" value="http://localhost:1616/api/v1/transactions" placeholder="http://localhost:1616/..." />
-        </div>
-        <div class="hint">Defaults to your local server on port 1616.</div>
+  <div class="grid">
+    <aside class="side">
+      <div class="knum">Configuration</div>
+      <div class="sec">
+        <h3>Target</h3>
+        <div class="fld"><label>Endpoint</label><div class="url-row">
+          <select id="method"><option>POST</option><option>PUT</option><option>PATCH</option><option>GET</option><option>DELETE</option></select>
+          <input id="url" value="http://localhost:1616/api/v1/transactions" placeholder="http://localhost:1616/..." /></div></div>
+        <div class="fld"><label>JWT Token</label><textarea id="jwt" class="jwt" placeholder="eyJhbGciOi..."></textarea>
+          <div class="jwt-info" id="jwtInfo"></div></div>
+        <div class="fld"><label>Extra Headers <span class="opt">(optional, JSON)</span></label><textarea id="headers" class="head">{}</textarea>
+          <div class="hint" id="headersHint">e.g. <code>{"X-Trace-Id": "abc123"}</code></div></div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title"><span class="num">2</span><svg class="icon"><use href="#i-shield"/></svg> Authentication</div>
-      <p class="section-sub">Paste your JWT — the <code>Bearer</code> prefix is added for you.</p>
-      <div class="field">
-        <label>JWT Token</label>
-        <textarea id="jwt" class="jwt" placeholder="eyJhbGciOi..."></textarea>
-        <div id="jwtInfo" class="jwt-info"></div>
-      </div>
-      <div class="field">
-        <label>Extra Headers <span style="color:var(--text-dim);font-weight:400;">(optional, JSON)</span></label>
-        <textarea id="headers" style="min-height:64px;">{}</textarea>
-        <div class="hint" id="headersHint">e.g. <code>{"X-Trace-Id": "abc123"}</code></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title"><span class="num">3</span><svg class="icon"><use href="#i-package"/></svg> Payload</div>
-      <p class="section-sub">Sent on every call as the request body.</p>
-      <div class="field">
-        <label>Request Body (JSON)</label>
-        <textarea id="payload" class="payload">{
+      <div class="sec">
+        <h3>Payload</h3>
+        <div class="fld"><label>Request Body — JSON</label><textarea id="payload">{
   "fromAddress": "bcrt1qksqyu5dgzrkwd0s049htlnkjnq4zwkj0azpzmd",
   "toAddress": "bcrt1qqa68f8ht9sg9h9xgg3ga74ssl2ps4knf8m226z",
   "amount": 10000000,
   "networkName": "BTC",
-  "assetName": "BTC",
-  "feeStrategy": {
-    "type": "SPECIFIED_RATE",
-    "minimumUnitPerVByte": 5,
-    "maximumFee": null
-  },
-  "networkSpecificParams": {
-    "networkName": "BTC",
-    "fromAddress": "bcrt1qksqyu5dgzrkwd0s049htlnkjnq4zwkj0azpzmd",
-    "amount": 10000000,
-    "scriptType": "P2WPKH"
-  }
-}</textarea>
-        <div class="hint" id="payloadHint">Valid JSON required.</div>
+  "feeStrategy": { "type": "SPECIFIED_RATE", "minimumUnitPerVByte": 5 }
+}</textarea><div class="hint" id="payHint">Valid JSON</div></div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title"><span class="num">4</span><svg class="icon"><use href="#i-gauge"/></svg> Load Profile</div>
-      <p class="section-sub">Pick a preset or tune it yourself.</p>
-      <div class="presets">
-        <div class="preset" data-preset="smoke"><div class="name">Smoke</div><div class="desc">10 @ 1/s</div></div>
-        <div class="preset" data-preset="load"><div class="name">Load</div><div class="desc">100 @ 10/s</div></div>
-        <div class="preset" data-preset="stress"><div class="name">Stress</div><div class="desc">500 @ 50/s</div></div>
-        <div class="preset" data-preset="spike"><div class="name">Spike</div><div class="desc">1000 @ 200/s</div></div>
-      </div>
-      <div class="row row-2">
-        <div class="field"><label>Total requests</label><input id="total" type="number" min="1" value="100" /></div>
-        <div class="field"><label>Rate (req/sec)</label><input id="rps" type="number" min="0.1" step="0.1" value="10" /></div>
-      </div>
-      <div class="row row-2">
-        <div class="field"><label>Max in-flight</label><input id="concurrency" type="number" min="1" value="20" /></div>
-        <div class="field"><label>Timeout (ms)</label><input id="timeout" type="number" min="100" value="30000" /></div>
-      </div>
-      <button id="copyCurl" class="ghost tiny" style="width:100%;margin-top:6px;">
-        <svg class="icon" style="width:13px;height:13px;"><use href="#i-copy"/></svg>
-        Copy as cURL
-      </button>
-    </div>
-
-    <div class="actions">
-      <button id="testOne" class="ghost" title="Send a single test request">
-        <svg class="icon" style="width:14px;height:14px;"><use href="#i-send"/></svg>
-        Test
-      </button>
-      <button id="start" class="primary" title="Start load test (⌘↵)">
-        <svg class="icon" style="width:14px;height:14px;"><use href="#i-play"/></svg>
-        Start Load Test
-      </button>
-      <button id="stop" class="danger" disabled title="Stop test (Esc)">
-        <svg class="icon" style="width:14px;height:14px;"><use href="#i-stop"/></svg>
-      </button>
-    </div>
-  </aside>
-
-  <section class="workspace">
-    <div id="viewingBanner" class="viewing-banner">
-      <div class="left">
-        <svg class="icon"><use href="#i-history"/></svg>
-        <div>Viewing run from <strong id="viewingLabel"></strong> — read-only</div>
-      </div>
-      <button id="exitViewing" class="tiny">
-        <svg class="icon" style="width:12px;height:12px;"><use href="#i-arrow-left"/></svg>
-        Back to live
-      </button>
-    </div>
-
-    <div class="progress-wrap">
-      <div class="progress-header">
-        <div>
-          <div class="progress-title" id="progressLabel">Ready when you are</div>
-          <div class="progress-sub" id="progressSub">Configure your test on the left, then hit Start.</div>
+      <div class="sec">
+        <h3>Load Profile</h3>
+        <div class="presets">
+          <div class="pre" data-preset="smoke"><div class="n">Smoke</div><div class="d">20 @ 2/s</div></div>
+          <div class="pre on" data-preset="load"><div class="n">Load</div><div class="d">200 @ 20/s</div></div>
+          <div class="pre" data-preset="stress"><div class="n">Stress</div><div class="d">600 @ 60/s</div></div>
+          <div class="pre" data-preset="spike"><div class="n">Spike</div><div class="d">1.5k @ 220</div></div>
         </div>
-        <div class="progress-meta">
-          <div>Elapsed <span class="val" id="elapsed">00:00</span></div>
-          <div>In-flight <span class="val" id="inflight">0</span></div>
-        </div>
+        <div class="row2"><div class="fld"><label>Total</label><input id="total" type="number" min="1" value="200" /></div><div class="fld"><label>Rate /s</label><input id="rps" type="number" min="0.1" step="0.1" value="20" /></div></div>
+        <div class="row2"><div class="fld"><label>In-flight</label><input id="concurrency" type="number" min="1" value="24" /></div><div class="fld"><label>Timeout</label><input id="timeout" type="number" min="1" value="30000" /></div></div>
       </div>
-      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-    </div>
+      <div class="btns">
+        <button class="go" id="startBtn">Start Load Test</button>
+        <div class="btn-row"><button id="testBtn">Probe</button><button class="kill" id="stopBtn" disabled>Stop</button></div>
+        <button class="curl" id="copyCurlBtn">Copy as cURL</button>
+      </div>
+    </aside>
 
-    <div class="kpis">
-      <div class="kpi"><div class="label">Sent</div><div class="value" id="kSent">0</div></div>
-      <div class="kpi ok success-bar" id="kpiSuccess"><div class="label">Success rate</div><div class="value"><span id="kSuccessRate">—</span><span class="unit">%</span></div></div>
-      <div class="kpi err"><div class="label">Failed</div><div class="value" id="kFail">0</div></div>
-      <div class="kpi accent"><div class="label">Throughput</div><div class="value"><span id="kRps">0</span><span class="unit">/s</span></div></div>
-      <div class="kpi"><div class="label">Avg latency</div><div class="value"><span id="kAvg">0</span><span class="unit">ms</span></div></div>
-      <div class="kpi"><div class="label">p95</div><div class="value"><span id="kP95">0</span><span class="unit">ms</span></div></div>
-      <div class="kpi"><div class="label">p99</div><div class="value"><span id="kP99">0</span><span class="unit">ms</span></div></div>
-    </div>
+    <section class="main">
+      <div class="view-banner" id="viewBanner">
+        <div>Viewing saved run from <b id="viewLabel"></b> — read-only</div>
+        <button id="exitViewBtn">Back to live</button>
+      </div>
 
-    <div class="bottom">
-      <!-- LEFT: analytics -->
-      <div class="panel">
-        <div class="panel-header">
+      <div class="kpis">
+        <div class="kpi"><div class="k">Sent</div><div class="v" id="kSent">0</div></div>
+        <div class="kpi ok"><div class="k">Success</div><div class="v"><span id="kRate">—</span><span class="u">%</span></div></div>
+        <div class="kpi red"><div class="k">Failed</div><div class="v" id="kFail">0</div></div>
+        <div class="kpi"><div class="k">Req / sec</div><div class="v" id="kRps">0</div></div>
+        <div class="kpi"><div class="k">p95</div><div class="v"><span id="kP95">0</span><span class="u">ms</span></div></div>
+        <div class="kpi"><div class="k">p99</div><div class="v"><span id="kP99">0</span><span class="u">ms</span></div></div>
+      </div>
+
+      <div class="prog">
+        <span class="pl" data-proglabel>Ready</span>
+        <div class="track"><div class="fill" data-bind="prog-w"></div></div>
+        <span class="m">In-flight <b id="inflight">0</b></span>
+        <span class="m">Elapsed <b id="elapsed">00:00</b></span>
+      </div>
+
+      <div class="low">
+        <div class="panel" data-tabhost>
           <div class="tabs">
-            <div class="tab active" data-tab="throughput"><svg class="icon" style="width:14px;height:14px;"><use href="#i-trend"/></svg> Throughput</div>
-            <div class="tab" data-tab="latency"><svg class="icon" style="width:14px;height:14px;"><use href="#i-timer"/></svg> Latency</div>
-            <div class="tab" data-tab="distribution"><svg class="icon" style="width:14px;height:14px;"><use href="#i-bars"/></svg> Distribution</div>
-            <div class="tab" data-tab="summary"><svg class="icon" style="width:14px;height:14px;"><use href="#i-list"/></svg> Summary</div>
+            <div class="tab on" data-tab="thr">Throughput</div>
+            <div class="tab" data-tab="lat">Latency</div>
+            <div class="tab" data-tab="dist">Distribution</div>
           </div>
-        </div>
-        <div class="panel-body">
-          <div class="tab-panel active" data-panel="throughput">
-            <div class="chart-toolbar">
-              <div class="chart-legend">
-                <span><i class="sw" style="background:var(--accent-2)"></i>Throughput (req/s)</span>
-                <span><i class="sw" style="background:var(--warn)"></i>Avg latency (ms)</span>
-              </div>
+          <div class="pb">
+            <div class="vp on" data-v="thr">
+              <div class="legend"><span><i style="background:var(--ink)"></i>Req/s</span><span><i style="background:var(--red)"></i>Avg latency</span></div>
+              <div class="cw"><canvas id="cThr"></canvas><div class="empty" id="emThr" style="position:absolute;inset:14px;"><span>Throughput and latency plot here once a run begins.</span></div></div>
             </div>
-            <div class="chart-wrap" id="wrapThroughput">
-              <canvas id="chartThroughput"></canvas>
-              <div class="ct" id="ctThroughput"></div>
-              <div class="empty" id="emptyThroughput" style="position:absolute;inset:14px;">
-                <div class="icon-wrap"><svg class="icon"><use href="#i-trend"/></svg></div>
-                <div class="t">No data yet</div>
-                <div class="d">Throughput and average latency will chart live here once you start a test.</div>
-              </div>
+            <div class="vp" data-v="lat">
+              <div class="legend"><span><i style="background:var(--dim)"></i>p50</span><span><i style="background:var(--warn)"></i>p95</span><span><i style="background:var(--red)"></i>p99</span></div>
+              <div class="cw"><canvas id="cLat"></canvas><div class="empty" id="emLat" style="position:absolute;inset:14px;"><span>Percentile curves build as requests resolve.</span></div></div>
             </div>
-          </div>
-
-          <div class="tab-panel" data-panel="latency">
-            <div class="chart-toolbar">
-              <div class="chart-legend">
-                <span><i class="sw" style="background:var(--info)"></i>p50</span>
-                <span><i class="sw" style="background:var(--warn)"></i>p95</span>
-                <span><i class="sw" style="background:var(--err)"></i>p99</span>
-              </div>
-            </div>
-            <div class="chart-wrap" id="wrapLatency">
-              <canvas id="chartLatency"></canvas>
-              <div class="ct" id="ctLatency"></div>
-              <div class="empty" id="emptyLatency" style="position:absolute;inset:14px;">
-                <div class="icon-wrap"><svg class="icon"><use href="#i-timer"/></svg></div>
-                <div class="t">No latency samples yet</div>
-                <div class="d">p50, p95, and p99 percentiles will plot over time once requests complete.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tab-panel" data-panel="distribution">
-            <div class="chart-wrap" id="wrapHistogram" style="padding:20px;">
-              <canvas id="chartHistogram"></canvas>
-              <div class="empty" id="emptyHistogram" style="position:absolute;inset:20px;">
-                <div class="icon-wrap"><svg class="icon"><use href="#i-bars"/></svg></div>
-                <div class="t">No distribution yet</div>
-                <div class="d">A histogram of response times will appear here as requests come back.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tab-panel" data-panel="summary">
-            <div class="summary" id="summaryContent">
-              <div class="empty">
-                <div class="icon-wrap"><svg class="icon"><use href="#i-list"/></svg></div>
-                <div class="t">No summary yet</div>
-                <div class="d">A full breakdown will appear here once you run a test.</div>
-              </div>
+            <div class="vp" data-v="dist">
+              <div class="cw"><canvas id="cDist"></canvas><div class="empty" id="emDist" style="position:absolute;inset:14px;"><span>A latency histogram appears as responses return.</span></div></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="splitter" id="splitter"></div>
-
-      <!-- RIGHT: responses -->
-      <div class="panel">
-        <div class="panel-header">
+        <div class="panel" data-tabhost>
           <div class="tabs">
-            <div class="tab active" data-tab="responses">All <span class="count" id="tabCountAll">0</span></div>
-            <div class="tab" data-tab="errors">Errors <span class="count" id="tabCountErrors">0</span></div>
+            <div class="tab on" data-tab="stream">Responses <span class="c" id="cAll">0</span></div>
+            <div class="tab" data-tab="err">Errors <span class="c" id="cErr">0</span></div>
+            <div class="tab" data-tab="sum">Summary</div>
+            <div class="codes" id="codes"></div>
           </div>
-          <div class="status-codes" id="statusCodes"></div>
-        </div>
-        <div class="panel-body">
-          <div class="tab-panel active" data-panel="responses">
-            <div class="log-toolbar">
-              <div class="search-box">
-                <svg class="icon"><use href="#i-search"/></svg>
-                <input id="logSearch" placeholder="Filter responses by code, ID, or body…" />
-              </div>
+          <div class="pb">
+            <div class="vp on" data-v="stream">
+              <div class="resp-tools"><input id="respFilter" placeholder="Filter by code, #id, or body…  (⌘K)" /></div>
+              <div class="log" id="log"><div class="empty"><span>Each response — time, code, latency — lists here as it arrives. Click a row for the full body.</span></div></div>
             </div>
-            <div class="log" id="log">
-              <div class="empty" id="logEmpty">
-                <div class="icon-wrap"><svg class="icon"><use href="#i-inbox"/></svg></div>
-                <div class="t">Nothing here yet</div>
-                <div class="d">Each request's status, latency, and body will appear here as responses come in.</div>
-              </div>
-            </div>
-          </div>
-          <div class="tab-panel" data-panel="errors">
-            <div class="errors" id="errors">
-              <div class="empty" id="errorsEmpty">
-                <div class="icon-wrap"><svg class="icon" style="color:var(--ok)"><use href="#i-check-circle"/></svg></div>
-                <div class="t">No errors</div>
-                <div class="d">Failed requests will be grouped here by code with sample messages.</div>
-              </div>
-            </div>
+            <div class="vp" data-v="err"><div class="errs" id="errors"><div class="empty"><span>Failed requests are grouped here by status code with a sample body.</span></div></div></div>
+            <div class="vp" data-v="sum"><div class="sum" id="sum"><div class="empty"><span>A full breakdown appears here after a run.</span></div></div></div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-</main>
-
-<!-- History drawer -->
-<div id="backdrop" class="backdrop"></div>
-<aside id="drawer" class="drawer" aria-hidden="true">
-  <div class="drawer-head">
-    <div>
-      <h2>Run History</h2>
-      <div class="sub">Last 10 runs · click to view</div>
-    </div>
-    <button class="icon-btn" id="drawerClose" aria-label="Close">
-      <svg class="icon"><use href="#i-x"/></svg>
-    </button>
+    </section>
   </div>
-  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- history drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="histDrawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div><h2>Run History</h2><div class="sub">Last 10 runs · click to view</div></div>
+    <button class="xbtn" id="histClose" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="histBody"></div>
 </aside>
 
-<!-- Shortcuts modal -->
-<div id="shortcutsModal" class="modal" role="dialog" aria-modal="true">
-  <div class="backdrop show" style="position:absolute;" data-close></div>
-  <div class="modal-box" style="position:relative;z-index:1;">
-    <div class="modal-head">
-      <h2>Keyboard Shortcuts</h2>
-      <button class="icon-btn" data-close aria-label="Close">
-        <svg class="icon"><use href="#i-x"/></svg>
-      </button>
-    </div>
+<!-- response detail drawer -->
+<aside class="drawer" id="detDrawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div><h2 id="detTitle">Response</h2><div class="sub" id="detSub"></div></div>
+    <button class="xbtn" id="detClose" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="detBody"></div>
+</aside>
+
+<!-- shortcuts modal -->
+<div class="modal" id="keysModal">
+  <div class="modal-box">
+    <div class="modal-head"><h2>Keyboard Shortcuts</h2><button class="xbtn" data-close-keys aria-label="Close">✕</button></div>
     <div class="modal-body">
-      <div class="shortcut-row"><span class="desc">Start load test</span><span class="keys"><kbd id="modKey1">⌘</kbd><kbd>↵</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Stop running test</span><span class="keys"><kbd>Esc</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Send single test request</span><span class="keys"><kbd id="modKey2">⌘</kbd><kbd>T</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Focus search</span><span class="keys"><kbd id="modKey3">⌘</kbd><kbd>K</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Toggle sidebar</span><span class="keys"><kbd id="modKey4">⌘</kbd><kbd>B</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Toggle theme</span><span class="keys"><kbd id="modKey5">⌘</kbd><kbd>D</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Open run history</span><span class="keys"><kbd id="modKey6">⌘</kbd><kbd>H</kbd></span></div>
-      <div class="shortcut-row"><span class="desc">Show this help</span><span class="keys"><kbd>?</kbd></span></div>
+      <div class="sc-row"><span class="desc">Start load test</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>↵</kbd></span></div>
+      <div class="sc-row"><span class="desc">Stop running test</span><span class="keys"><kbd>Esc</kbd></span></div>
+      <div class="sc-row"><span class="desc">Probe (single request)</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>T</kbd></span></div>
+      <div class="sc-row"><span class="desc">Filter responses</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>K</kbd></span></div>
+      <div class="sc-row"><span class="desc">Open run history</span><span class="keys"><kbd class="mk">⌘</kbd><kbd>H</kbd></span></div>
+      <div class="sc-row"><span class="desc">Show this help</span><span class="keys"><kbd>?</kbd></span></div>
     </div>
   </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script>
 (() => {
-  const $ = id => document.getElementById(id);
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const $$ = sel => document.querySelectorAll(sel);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const cvar = (n, f) => css(n) || f;
   const isMac = navigator.platform.toLowerCase().includes('mac');
-  const modKey = isMac ? '⌘' : 'Ctrl';
-  if (!isMac) {
-    document.querySelectorAll('#searchKbd, [id^=modKey]').forEach(el => { el.textContent = el.id === 'searchKbd' ? 'Ctrl K' : 'Ctrl'; });
-  }
+  if (!isMac) $$('.mk').forEach(k => k.textContent = 'Ctrl');
 
-  // ---- State ----
-  let running = false;
-  let abortCtl = null;
-  let pumpTick = null;
-  let latencies = [];
-  const statusCounts = {};
-  const errorGroups = {};
-  const series = [];
-  let lastSampleAt = 0, lastSampleSent = 0, lastSampleLatSum = 0, lastSampleLatCount = 0;
-  let latSum = 0;
-  let startAt = 0;
-  let endAt = 0;
-  let totalPlanned = 0;
-  const stats = { sent: 0, ok: 0, fail: 0, inflight: 0 };
-  let viewingRun = null;
-  let currentConfig = null;
+  /* ---------- state ---------- */
+  let running = false, abortCtl = null, pumpTick = null;
+  let startAt = 0, endAt = 0, total = 0;
+  let sent = 0, ok = 0, fail = 0, inflight = 0, launched = 0;
+  let latencies = [], latSum = 0;
+  let statusCounts = {}, errorGroups = {}, series = [];
+  let responses = [];                 // newest-first, with full body, for the detail view
+  let lastSampleAt = 0, lastSent = 0;
+  let viewing = null;                 // a saved run object when viewing history
+  let currentReq = null;              // request used by the detail drawer
+  const disp = { sent: 0, fail: 0, rps: 0, p95: 0, p99: 0, rate: 0 };
+  const LIVE_CAP = 600, LOG_CAP = 280;
 
-  // ---- Background-safe timers ----
-  // Browsers throttle setInterval/setTimeout to ~once per second in hidden tabs,
-  // which stalls the load generator the moment you switch away. We drive timing
-  // from a Web Worker (whose timers keep full speed in the background) and fall
-  // back to normal timers only if a Worker can't be created.
+  const PRESETS = {
+    smoke:  { total: 20,   rps: 2,   concurrency: 4 },
+    load:   { total: 200,  rps: 20,  concurrency: 24 },
+    stress: { total: 600,  rps: 60,  concurrency: 80 },
+    spike:  { total: 1500, rps: 220, concurrency: 200 },
+  };
+
+  /* ---------- helpers ---------- */
+  const arrMin = a => a.reduce((m, v) => (v < m ? v : m), Infinity);
+  const arrMax = a => a.reduce((m, v) => (v > m ? v : m), -Infinity);
+  const pc = (sorted, p) => sorted.length ? Math.round(sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]) : 0;
+  const fmt = s => { s = Math.floor(s); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const oneLine = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 240);
+  const fmtAgo = ms => { const s = Math.floor((Date.now() - ms) / 1000); if (s < 60) return `${s}s ago`; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; return `${Math.floor(s / 86400)}d ago`; };
+
+  /* ---------- background-safe timers (Web Worker; keeps firing in hidden tabs) ---------- */
   const timerWorker = (() => {
     try {
       const src = "const m=new Map();onmessage=function(e){var d=e.data;" +
@@ -1320,1198 +416,617 @@
   if (timerWorker) timerWorker.onmessage = e => { const fn = timerCbs.get(e.data); if (fn) fn(); };
   function wInterval(fn, ms) {
     if (!timerWorker) return { fb: setInterval(fn, ms) };
-    const id = timerSeq++;
-    timerCbs.set(id, fn);
-    timerWorker.postMessage({ t: 'i', id, ms });
-    return { id };
+    const id = timerSeq++; timerCbs.set(id, fn); timerWorker.postMessage({ t: 'i', id, ms }); return { id };
   }
   function wClear(h) {
     if (!h) return;
     if (h.fb != null) { clearInterval(h.fb); return; }
-    timerCbs.delete(h.id);
-    if (timerWorker) timerWorker.postMessage({ t: 'c', id: h.id });
+    timerCbs.delete(h.id); if (timerWorker) timerWorker.postMessage({ t: 'c', id: h.id });
   }
 
-  // ---- Helpers ----
-  // Stack-safe min/max — spreading a very large array into Math.min/max overflows.
-  const arrMin = a => a.reduce((m, v) => (v < m ? v : m), Infinity);
-  const arrMax = a => a.reduce((m, v) => (v > m ? v : m), -Infinity);
-  const fmtTime = s => {
-    s = Math.floor(s);
-    const m = Math.floor(s / 60);
-    return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  };
-  const fmtAgo = ms => {
-    const s = Math.floor((Date.now() - ms) / 1000);
-    if (s < 60) return `${s}s ago`;
-    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-    return `${Math.floor(s / 86400)}d ago`;
-  };
-  const percentile = (arr, p) => {
-    if (!arr.length) return 0;
-    const s = [...arr].sort((a, b) => a - b);
-    return Math.round(s[Math.min(s.length - 1, Math.floor(s.length * p))]);
-  };
-  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-  // ---- Toast ----
-  const toastEl = $('toast');
-  let toastTimer;
-  function toast(msg, kind = 'info') {
-    const iconId = kind === 'ok' ? 'i-check-circle' : kind === 'err' ? 'i-alert' : 'i-info';
-    toastEl.innerHTML = `<svg class="icon"><use href="#${iconId}"/></svg><span>${escapeHtml(msg)}</span>`;
-    toastEl.className = 'toast show ' + kind;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+  /* ---------- toast ---------- */
+  const toastEl = byId('toast'); let toastTimer;
+  function toast(msg, kind = '') {
+    toastEl.textContent = msg; toastEl.className = 'toast show ' + kind;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
   }
 
-  // ---- Theme ----
-  function setTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('jmetter.theme', t);
-    $('themeIcon').innerHTML = `<use href="#${t === 'dark' ? 'i-sun' : 'i-moon'}"/>`;
-    requestAnimationFrame(() => { resizeAll(); drawAllCharts(); });
+  /* ---------- status ---------- */
+  function setStatus(text, state) {
+    $$('[data-status]').forEach(e => e.textContent = text);
+    document.body.classList.remove('running', 'state-err', 'state-done', 'state-stopped');
+    if (state) document.body.classList.add(state);
   }
-  $('themeBtn').addEventListener('click', () => {
-    setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-  });
-  setTheme(localStorage.getItem('jmetter.theme') || 'dark');
 
-  // ---- Sidebar collapse ----
-  function setSidebar(collapsed) {
-    document.body.classList.toggle('sidebar-collapsed', collapsed);
-    localStorage.setItem('jmetter.sidebar', collapsed ? '1' : '0');
-    setTimeout(() => { resizeAll(); drawAllCharts(); }, 280);
-  }
-  $('sidebarToggle').addEventListener('click', () => {
-    setSidebar(!document.body.classList.contains('sidebar-collapsed'));
-  });
-  if (localStorage.getItem('jmetter.sidebar') === '1') setSidebar(true);
+  /* ---------- clock ---------- */
+  const tickClock = () => { const t = new Date().toTimeString().slice(0, 8); $$('[data-clock]').forEach(c => c.textContent = t); };
+  tickClock(); setInterval(tickClock, 1000);
 
-  // ---- JWT decoder ----
+  /* ---------- JWT ---------- */
   function decodeJwt(raw) {
     try {
-      let t = raw.trim();
-      if (t.toLowerCase().startsWith('bearer ')) t = t.slice(7).trim();
+      let t = raw.trim(); if (t.toLowerCase().startsWith('bearer ')) t = t.slice(7).trim();
       if (!t) return null;
-      const parts = t.split('.');
-      if (parts.length < 2) return { invalid: true };
+      const parts = t.split('.'); if (parts.length < 2) return { invalid: true };
       const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
       const pad = b64 + '='.repeat((4 - b64.length % 4) % 4);
-      return { payload: JSON.parse(atob(pad)) };
+      return { payload: JSON.parse(decodeURIComponent(escape(atob(pad)))) };
     } catch { return { invalid: true }; }
   }
-  function renderJwtInfo() {
-    const el = $('jwtInfo');
-    const raw = $('jwt').value;
+  function renderJwt() {
+    const el = byId('jwtInfo'), raw = byId('jwt').value;
     if (!raw.trim()) { el.className = 'jwt-info'; el.innerHTML = ''; return; }
     const r = decodeJwt(raw);
-    if (!r || r.invalid) {
-      el.className = 'jwt-info show err';
-      el.innerHTML = `<svg class="icon"><use href="#i-alert"/></svg><div class="body"><div class="who">Not a valid JWT</div><div class="meta">Couldn't decode the payload — double-check the token.</div></div>`;
-      return;
-    }
-    const p = r.payload;
+    if (!r || r.invalid) { el.className = 'jwt-info show err'; el.innerHTML = `<div class="who">Not a valid JWT</div><div class="jmeta">Couldn't decode the payload — double-check the token.</div>`; return; }
+    const p = r.payload, now = Date.now() / 1000;
     const who = p.name || p.preferred_username || p.email || p.sub || 'Authenticated';
-    const now = Date.now() / 1000;
-    let metaBits = [];
-    if (p.iss) { try { metaBits.push(`iss: ${new URL(p.iss).hostname}`); } catch { metaBits.push(`iss: ${p.iss}`); } }
-    if (p.preferred_username && p.preferred_username !== who) metaBits.push(p.preferred_username);
-    let klass = 'ok', expTxt = '', iconId = 'i-check-circle';
+    let bits = [], klass = 'ok';
     if (p.exp) {
       const secs = p.exp - now;
-      if (secs <= 0) { klass = 'err'; iconId = 'i-alert'; expTxt = `Expired ${Math.abs(Math.round(secs / 60))}m ago`; }
-      else if (secs < 300) { klass = 'warn'; iconId = 'i-alert'; expTxt = `Expires in ${Math.round(secs / 60)}m`; }
-      else if (secs < 3600) expTxt = `Expires in ${Math.round(secs / 60)}m`;
-      else expTxt = `Expires in ${Math.round(secs / 3600)}h`;
+      if (secs <= 0) { klass = 'err'; bits.push(`Expired ${Math.abs(Math.round(secs / 60))}m ago`); }
+      else if (secs < 300) { klass = 'warn'; bits.push(`Expires in ${Math.round(secs / 60)}m`); }
+      else if (secs < 3600) bits.push(`Expires in ${Math.round(secs / 60)}m`);
+      else bits.push(`Expires in ${Math.round(secs / 3600)}h`);
     }
+    if (p.iss) { try { bits.push('iss: ' + new URL(p.iss).hostname); } catch { bits.push('iss: ' + p.iss); } }
     el.className = 'jwt-info show ' + klass;
-    el.innerHTML = `<svg class="icon"><use href="#${iconId}"/></svg><div class="body"><div class="who">${escapeHtml(who)}</div><div class="meta">${[expTxt, ...metaBits].filter(Boolean).map(escapeHtml).join(' · ')}</div></div>`;
+    el.innerHTML = `<div class="who">${escapeHtml(who)}</div><div class="jmeta">${bits.map(escapeHtml).join(' · ')}</div>`;
   }
 
-  // ---- Log + errors ----
-  const logEl = $('log');
-  const errorsEl = $('errors');
-  const statusCodesEl = $('statusCodes');
-  let logFilter = '';
-
-  function addLog(id, code, codeClass, msg) {
-    const e = $('logEmpty'); if (e) e.remove();
-    const line = document.createElement('div');
-    line.className = 'log-line';
-    line.dataset.code = code;
-    line.dataset.id = id;
-    const ts = new Date().toTimeString().slice(0, 8);
-    line.innerHTML = `<span class="ts">${ts}</span><span class="id">#${id}</span><span class="code ${codeClass}">${code}</span><span class="msg"></span>`;
-    line.querySelector('.msg').textContent = msg;
-    if (logFilter && !lineMatchesFilter(line, logFilter)) line.classList.add('hidden');
-    logEl.prepend(line);
-    while (logEl.children.length > 500) logEl.removeChild(logEl.lastChild);
-  }
-  function lineMatchesFilter(line, f) {
-    const t = line.textContent.toLowerCase();
-    return t.includes(f.toLowerCase());
-  }
-  function applyLogFilter() {
-    document.querySelectorAll('#log .log-line').forEach(line => {
-      line.classList.toggle('hidden', logFilter && !lineMatchesFilter(line, logFilter));
-    });
-  }
-
-  function bumpStatus(code) {
-    statusCounts[code] = (statusCounts[code] || 0) + 1;
-    renderStatusChips();
-  }
-  function renderStatusChips() {
-    statusCodesEl.innerHTML = '';
-    for (const [c, n] of Object.entries(statusCounts)) {
-      const chip = document.createElement('span');
-      const isNet = c === 'NET' || c === 'TIMEOUT' || c === 'ABORT';
-      chip.className = 'chip ' + (isNet ? 'net' : 's' + String(c)[0]);
-      chip.textContent = `${c} · ${n}`;
-      statusCodesEl.appendChild(chip);
-    }
-  }
-
-  function bumpError(code, sample) {
-    if (!errorGroups[code]) errorGroups[code] = { count: 0, sample: sample };
-    errorGroups[code].count++;
-    if (!errorGroups[code].sample && sample) errorGroups[code].sample = sample;
-    renderErrors();
-  }
-  function renderErrors() {
-    const keys = Object.keys(errorGroups);
-    if (!keys.length) {
-      errorsEl.innerHTML = `<div class="empty"><div class="icon-wrap" style="color:var(--ok)"><svg class="icon"><use href="#i-check-circle"/></svg></div><div class="t">No errors</div><div class="d">Failed requests will be grouped here by code with sample messages.</div></div>`;
-      $('tabCountErrors').textContent = '0';
-      return;
-    }
-    let html = '';
-    let total = 0;
-    for (const [code, info] of Object.entries(errorGroups)) {
-      total += info.count;
-      const isNet = code === 'NET' || code === 'TIMEOUT' || code === 'ABORT';
-      html += `<div class="err-card ${isNet ? 'warn' : ''}">
-        <div class="err-card-head">
-          <div class="err-card-code">${escapeHtml(code)}</div>
-          <div class="err-card-count">${info.count} occurrence${info.count !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="err-card-sample">${escapeHtml((info.sample || '(no body)').slice(0, 600))}</div>
-      </div>`;
-    }
-    errorsEl.innerHTML = html;
-    $('tabCountErrors').textContent = total;
-  }
-
-  // ---- KPIs ----
-  function renderKpis() {
-    $('kSent').textContent = stats.sent;
-    $('kFail').textContent = stats.fail;
-    $('inflight').textContent = stats.inflight;
-    const rate = stats.sent > 0 ? (stats.ok / stats.sent * 100) : 0;
-    $('kSuccessRate').textContent = stats.sent ? rate.toFixed(1) : '—';
-    $('kpiSuccess').style.setProperty('--rate', rate + '%');
-    const elapsed = (performance.now() - startAt) / 1000;
-    const rps = elapsed > 0 ? stats.sent / elapsed : 0;
-    $('kRps').textContent = rps.toFixed(1);
-    const avg = latencies.length ? latSum / latencies.length : 0;
-    $('kAvg').textContent = Math.round(avg);
-    $('kP95').textContent = percentile(latencies, 0.95);
-    $('kP99').textContent = percentile(latencies, 0.99);
-    $('tabCountAll').textContent = stats.sent;
-    const pct = totalPlanned ? Math.min(100, (stats.sent / totalPlanned) * 100) : 0;
-    $('progressFill').style.width = pct + '%';
-    $('elapsed').textContent = fmtTime(elapsed);
-    if (running) {
-      $('progressLabel').textContent = `Running — ${stats.sent} of ${totalPlanned} sent`;
-      $('progressSub').textContent = `${Math.round(pct)}% complete`;
-    }
-  }
-
-  // ---- Charts ----
-  const canvases = {
-    throughput: $('chartThroughput'),
-    latency: $('chartLatency'),
-    histogram: $('chartHistogram'),
-  };
-  const ctxs = Object.fromEntries(Object.entries(canvases).map(([k, c]) => [k, c.getContext('2d')]));
-  // Hover state for tooltips
-  const hover = { throughput: null, latency: null };
-  const chartGeom = { throughput: null, latency: null };
-
-  function resizeAll() {
-    for (const [k, c] of Object.entries(canvases)) {
-      const r = c.getBoundingClientRect();
-      if (!r.width || !r.height) continue;
-      const dpr = window.devicePixelRatio || 1;
-      c.width = r.width * dpr;
-      c.height = r.height * dpr;
-      ctxs[k].setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-  }
-
-  function getCSSVar(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
-
-  function drawGrid(ctx, W, H, padL, padR, padT, padB, rows = 4) {
-    ctx.strokeStyle = getCSSVar('--grid-line');
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= rows; i++) {
-      const y = padT + ((H - padT - padB) / rows) * i;
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    }
-  }
-
-  function drawChartThroughput() {
-    const cv = canvases.throughput, ctx = ctxs.throughput;
-    const r = cv.getBoundingClientRect();
-    const W = r.width, H = r.height;
-    if (!W || !H) return;
-    ctx.clearRect(0, 0, W, H);
-    if (series.length < 2) { $('emptyThroughput').style.display = ''; chartGeom.throughput = null; return; }
-    $('emptyThroughput').style.display = 'none';
-    const padL = 50, padR = 54, padT = 16, padB = 26;
-    drawGrid(ctx, W, H, padL, padR, padT, padB);
-    const cw = W - padL - padR, ch = H - padT - padB;
-    const maxRps = Math.max(1, ...series.map(s => s.rps)) * 1.2;
-    const maxLat = Math.max(1, ...series.map(s => s.avgLatency)) * 1.2;
-    const t0 = series[0].t, tN = Math.max(series[series.length - 1].t, t0 + 1);
-
-    ctx.font = '10px "JetBrains Mono", ui-monospace';
-    ctx.fillStyle = '#818cf8'; ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      const v = maxRps * (1 - i / 4);
-      ctx.fillText(v.toFixed(0), padL - 8, padT + (ch / 4) * i + 3);
-    }
-    ctx.fillStyle = getCSSVar('--warn'); ctx.textAlign = 'left';
-    for (let i = 0; i <= 4; i++) {
-      const v = maxLat * (1 - i / 4);
-      ctx.fillText(v.toFixed(0) + 'ms', W - padR + 8, padT + (ch / 4) * i + 3);
-    }
-
-    const xAt = t => padL + ((t - t0) / (tN - t0)) * cw;
-    chartGeom.throughput = { padL, padR, padT, padB, cw, ch, maxRps, maxLat, t0, tN, xAt, W, H };
-
-    // Area for rps
-    ctx.beginPath();
-    series.forEach((s, i) => {
-      const x = xAt(s.t);
-      const y = padT + ch - (s.rps / maxRps) * ch;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.lineTo(xAt(series[series.length - 1].t), padT + ch);
-    ctx.lineTo(xAt(series[0].t), padT + ch);
-    ctx.closePath();
-    const g = ctx.createLinearGradient(0, padT, 0, padT + ch);
-    g.addColorStop(0, 'rgba(129,140,248,0.4)');
-    g.addColorStop(1, 'rgba(129,140,248,0)');
-    ctx.fillStyle = g; ctx.fill();
-
-    // RPS line
-    ctx.strokeStyle = '#818cf8'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    series.forEach((s, i) => {
-      const x = xAt(s.t);
-      const y = padT + ch - (s.rps / maxRps) * ch;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Latency line
-    ctx.strokeStyle = getCSSVar('--warn');
-    ctx.beginPath();
-    series.forEach((s, i) => {
-      const x = xAt(s.t);
-      const y = padT + ch - (s.avgLatency / maxLat) * ch;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Hover crosshair + dots
-    if (hover.throughput != null) {
-      const idx = hover.throughput;
-      const s = series[idx];
-      if (s) {
-        const x = xAt(s.t);
-        ctx.strokeStyle = getCSSVar('--border-hi');
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
-        ctx.setLineDash([]);
-        const yR = padT + ch - (s.rps / maxRps) * ch;
-        const yL = padT + ch - (s.avgLatency / maxLat) * ch;
-        ctx.fillStyle = '#818cf8';
-        ctx.beginPath(); ctx.arc(x, yR, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = getCSSVar('--warn');
-        ctx.beginPath(); ctx.arc(x, yL, 4, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-  }
-
-  function drawChartLatency() {
-    const cv = canvases.latency, ctx = ctxs.latency;
-    const r = cv.getBoundingClientRect();
-    const W = r.width, H = r.height;
-    if (!W || !H) return;
-    ctx.clearRect(0, 0, W, H);
-    const points = series.filter(s => s.p99 != null);
-    if (points.length < 2) { $('emptyLatency').style.display = ''; chartGeom.latency = null; return; }
-    $('emptyLatency').style.display = 'none';
-    const padL = 56, padR = 26, padT = 16, padB = 26;
-    drawGrid(ctx, W, H, padL, padR, padT, padB);
-    const cw = W - padL - padR, ch = H - padT - padB;
-    const maxLat = Math.max(1, ...points.map(s => s.p99)) * 1.18;
-    const t0 = points[0].t, tN = Math.max(points[points.length - 1].t, t0 + 1);
-    ctx.font = '10px "JetBrains Mono", ui-monospace'; ctx.fillStyle = getCSSVar('--text-mid'); ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      const v = maxLat * (1 - i / 4);
-      ctx.fillText(v.toFixed(0) + 'ms', padL - 8, padT + (ch / 4) * i + 3);
-    }
-    const xAt = t => padL + ((t - t0) / (tN - t0)) * cw;
-    const yAt = v => padT + ch - (v / maxLat) * ch;
-    chartGeom.latency = { padL, padR, padT, padB, cw, ch, maxLat, t0, tN, xAt, yAt, W, H, points };
-    const lines = [
-      { key: 'p50', color: getCSSVar('--info') },
-      { key: 'p95', color: getCSSVar('--warn') },
-      { key: 'p99', color: getCSSVar('--err') },
-    ];
-    for (const l of lines) {
-      ctx.strokeStyle = l.color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = xAt(p.t), y = yAt(p[l.key]);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-    }
-    if (hover.latency != null) {
-      const idx = hover.latency;
-      const p = points[idx];
-      if (p) {
-        const x = xAt(p.t);
-        ctx.strokeStyle = getCSSVar('--border-hi');
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch); ctx.stroke();
-        ctx.setLineDash([]);
-        for (const l of lines) {
-          ctx.fillStyle = l.color;
-          ctx.beginPath(); ctx.arc(x, yAt(p[l.key]), 4, 0, Math.PI * 2); ctx.fill();
-        }
-      }
-    }
-  }
-
-  function drawChartHistogram() {
-    const cv = canvases.histogram, ctx = ctxs.histogram;
-    const r = cv.getBoundingClientRect();
-    const W = r.width, H = r.height;
-    if (!W || !H) return;
-    ctx.clearRect(0, 0, W, H);
-    if (latencies.length < 2) { $('emptyHistogram').style.display = ''; return; }
-    $('emptyHistogram').style.display = 'none';
-    const padL = 52, padR = 24, padT = 18, padB = 50;
-    const cw = W - padL - padR, ch = H - padT - padB;
-
-    const p99 = percentile(latencies, 0.99);
-    const max = arrMax(latencies.slice(0, 5000));
-    const upper = Math.max(p99, max * 0.9, 10);
-    const bins = 24;
-    const binW = upper / bins;
-    const counts = new Array(bins).fill(0);
-    for (const l of latencies) {
-      if (l > upper) { counts[bins - 1]++; continue; }
-      const b = Math.min(bins - 1, Math.floor(l / binW));
-      counts[b]++;
-    }
-    const maxCount = Math.max(...counts, 1);
-
-    drawGrid(ctx, W, H, padL, padR, padT, padB);
-    ctx.font = '10px "JetBrains Mono", ui-monospace'; ctx.fillStyle = getCSSVar('--text-mid'); ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      const v = maxCount * (1 - i / 4);
-      ctx.fillText(v.toFixed(0), padL - 8, padT + (ch / 4) * i + 3);
-    }
-
-    const bw = cw / bins;
-    const p50 = percentile(latencies, 0.5);
-    const p95 = percentile(latencies, 0.95);
-
-    for (let i = 0; i < bins; i++) {
-      const h = (counts[i] / maxCount) * ch;
-      const x = padL + i * bw + 2;
-      const y = padT + ch - h;
-      const binStart = i * binW;
-      let color = getCSSVar('--accent');
-      if (binStart >= p95) color = getCSSVar('--err');
-      else if (binStart >= p50) color = getCSSVar('--warn');
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      const radius = Math.min(3, h / 2);
-      const w = bw - 4;
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + w - radius, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-      ctx.lineTo(x + w, y + h);
-      ctx.lineTo(x, y + h);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.fill();
-    }
-
-    // X labels
-    ctx.fillStyle = getCSSVar('--text-dim'); ctx.textAlign = 'center';
-    for (let i = 0; i <= 4; i++) {
-      const v = upper * (i / 4);
-      ctx.fillText(v.toFixed(0) + 'ms', padL + (cw / 4) * i, padT + ch + 16);
-    }
-
-    // legend
-    ctx.textAlign = 'left'; ctx.font = '10px "JetBrains Mono", ui-monospace';
-    const legend = [
-      ['≤ p50', getCSSVar('--accent')],
-      ['≤ p95', getCSSVar('--warn')],
-      ['> p95', getCSSVar('--err')],
-    ];
-    let lx = padL;
-    for (const [lbl, col] of legend) {
-      ctx.fillStyle = col; ctx.fillRect(lx, padT + ch + 30, 10, 8);
-      ctx.fillStyle = getCSSVar('--text-mid'); ctx.fillText(lbl, lx + 14, padT + ch + 38);
-      lx += 78;
-    }
-  }
-
-  function drawAllCharts() {
-    drawChartThroughput();
-    drawChartLatency();
-    drawChartHistogram();
-  }
-
-  function sample() {
-    const now = performance.now();
-    const dt = (now - lastSampleAt) / 1000;
-    if (dt <= 0) return;
-    const dSent = stats.sent - lastSampleSent;
-    const instRps = dSent / dt;
-    const dLatCount = latencies.length - lastSampleLatCount;
-    const dLatSum = latSum - lastSampleLatSum;
-    const instAvg = dLatCount > 0 ? dLatSum / dLatCount : 0;
-    series.push({
-      t: (now - startAt) / 1000,
-      rps: instRps,
-      avgLatency: instAvg,
-      p50: percentile(latencies, 0.5),
-      p95: percentile(latencies, 0.95),
-      p99: percentile(latencies, 0.99),
-    });
-    if (series.length > 600) series.shift();
-    lastSampleAt = now;
-    lastSampleSent = stats.sent;
-    lastSampleLatSum = latSum;
-    lastSampleLatCount = latencies.length;
-    drawAllCharts();
-  }
-
-  // ---- Chart hover tooltips ----
-  function setupHover(canvas, kind, tooltipEl, formatter) {
-    canvas.addEventListener('mousemove', e => {
-      const geom = chartGeom[kind];
-      if (!geom) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      if (x < geom.padL || x > geom.W - geom.padR) {
-        hover[kind] = null;
-        tooltipEl.classList.remove('show');
-        drawAllCharts();
-        return;
-      }
-      // find nearest point
-      const list = kind === 'throughput' ? series : (geom.points || []);
-      if (!list.length) return;
-      let best = 0, bestD = Infinity;
-      for (let i = 0; i < list.length; i++) {
-        const px = geom.xAt(list[i].t);
-        const d = Math.abs(px - x);
-        if (d < bestD) { bestD = d; best = i; }
-      }
-      hover[kind] = best;
-      const p = list[best];
-      tooltipEl.innerHTML = formatter(p);
-      const px = geom.xAt(p.t);
-      const ttRect = tooltipEl.getBoundingClientRect();
-      const left = Math.min(rect.width - 150, Math.max(8, px - 75 + 14));
-      tooltipEl.style.left = left + 'px';
-      tooltipEl.style.top = (geom.padT + 4) + 'px';
-      tooltipEl.classList.add('show');
-      drawAllCharts();
-    });
-    canvas.addEventListener('mouseleave', () => {
-      hover[kind] = null;
-      tooltipEl.classList.remove('show');
-      drawAllCharts();
-    });
-  }
-
-  // ---- Summary ----
-  function renderSummary() {
-    const el = $('summaryContent');
-    if (!stats.sent) {
-      el.innerHTML = `<div class="empty"><div class="icon-wrap"><svg class="icon"><use href="#i-list"/></svg></div><div class="t">No summary yet</div><div class="d">A full breakdown will appear here once you run a test.</div></div>`;
-      return;
-    }
-    const elapsed = ((endAt || performance.now()) - startAt) / 1000;
-    const rps = elapsed > 0 ? stats.sent / elapsed : 0;
-    const avg = latencies.length ? latSum / latencies.length : 0;
-    const min = latencies.length ? arrMin(latencies) : 0;
-    const max = latencies.length ? arrMax(latencies) : 0;
-    const rate = stats.sent ? (stats.ok / stats.sent * 100) : 0;
-    const cfg = currentConfig || {};
-    el.innerHTML = `
-      <div>
-        <h3><svg class="icon" style="width:13px;height:13px;color:var(--accent-2)"><use href="#i-package"/></svg> Request Volume</h3>
-        <div class="summary-grid">
-          <div class="summary-row"><span class="k">Total sent</span><span class="v">${stats.sent}</span></div>
-          <div class="summary-row"><span class="k">Successful</span><span class="v" style="color:var(--ok)">${stats.ok}</span></div>
-          <div class="summary-row"><span class="k">Failed</span><span class="v" style="color:${stats.fail ? 'var(--err)' : 'var(--text)'}">${stats.fail}</span></div>
-          <div class="summary-row"><span class="k">Success rate</span><span class="v">${rate.toFixed(2)}%</span></div>
-        </div>
-      </div>
-      <div>
-        <h3><svg class="icon" style="width:13px;height:13px;color:var(--accent-2)"><use href="#i-trend"/></svg> Throughput</h3>
-        <div class="summary-grid">
-          <div class="summary-row"><span class="k">Duration</span><span class="v">${elapsed.toFixed(2)}s</span></div>
-          <div class="summary-row"><span class="k">Avg throughput</span><span class="v">${rps.toFixed(2)} req/s</span></div>
-        </div>
-      </div>
-      <div>
-        <h3><svg class="icon" style="width:13px;height:13px;color:var(--accent-2)"><use href="#i-timer"/></svg> Latency</h3>
-        <div class="summary-grid">
-          <div class="summary-row"><span class="k">Min</span><span class="v">${Math.round(min)} ms</span></div>
-          <div class="summary-row"><span class="k">Max</span><span class="v">${Math.round(max)} ms</span></div>
-          <div class="summary-row"><span class="k">Average</span><span class="v">${Math.round(avg)} ms</span></div>
-          <div class="summary-row"><span class="k">p50 (median)</span><span class="v">${percentile(latencies, 0.5)} ms</span></div>
-          <div class="summary-row"><span class="k">p75</span><span class="v">${percentile(latencies, 0.75)} ms</span></div>
-          <div class="summary-row"><span class="k">p90</span><span class="v">${percentile(latencies, 0.9)} ms</span></div>
-          <div class="summary-row"><span class="k">p95</span><span class="v">${percentile(latencies, 0.95)} ms</span></div>
-          <div class="summary-row"><span class="k">p99</span><span class="v">${percentile(latencies, 0.99)} ms</span></div>
-        </div>
-      </div>
-      ${cfg.url ? `<div>
-        <h3><svg class="icon" style="width:13px;height:13px;color:var(--accent-2)"><use href="#i-target"/></svg> Configuration</h3>
-        <div class="summary-grid">
-          <div class="summary-row"><span class="k">Method</span><span class="v">${escapeHtml(cfg.method || '')}</span></div>
-          <div class="summary-row"><span class="k">Target</span><span class="v" style="font-size:11px;max-width:60%;text-overflow:ellipsis;overflow:hidden;">${escapeHtml(cfg.url || '')}</span></div>
-          <div class="summary-row"><span class="k">Planned total</span><span class="v">${cfg.total || ''}</span></div>
-          <div class="summary-row"><span class="k">Target rate</span><span class="v">${cfg.rps || ''} /s</span></div>
-          <div class="summary-row"><span class="k">Concurrency</span><span class="v">${cfg.concurrency || ''}</span></div>
-          <div class="summary-row"><span class="k">Timeout</span><span class="v">${cfg.timeout || ''} ms</span></div>
-        </div>
-      </div>` : ''}
-    `;
-  }
-
-  // ---- Validation ----
+  /* ---------- validation ---------- */
   function validate() {
-    let ok = true;
-    try { JSON.parse($('payload').value); $('payload').classList.remove('invalid'); $('payloadHint').textContent = 'Valid JSON required.'; $('payloadHint').classList.remove('err'); }
-    catch (e) { ok = false; $('payload').classList.add('invalid'); $('payloadHint').textContent = 'Invalid JSON: ' + e.message; $('payloadHint').classList.add('err'); }
-    try { JSON.parse($('headers').value || '{}'); $('headers').classList.remove('invalid'); $('headersHint').innerHTML = 'e.g. <code>{"X-Trace-Id": "abc123"}</code>'; $('headersHint').classList.remove('err'); }
-    catch (e) { ok = false; $('headers').classList.add('invalid'); $('headersHint').textContent = 'Invalid JSON: ' + e.message; $('headersHint').classList.add('err'); }
-    if (!$('url').value.trim()) { ok = false; $('url').classList.add('invalid'); } else $('url').classList.remove('invalid');
-    return ok;
+    let okv = true;
+    const pay = byId('payload'), payHint = byId('payHint');
+    try { JSON.parse(pay.value); payHint.textContent = 'Valid JSON'; payHint.classList.remove('bad'); pay.classList.remove('bad'); }
+    catch (e) { okv = false; payHint.textContent = '✗ ' + e.message; payHint.classList.add('bad'); pay.classList.add('bad'); }
+    const hd = byId('headers'), hdHint = byId('headersHint');
+    try { JSON.parse(hd.value || '{}'); hdHint.innerHTML = 'e.g. <code>{"X-Trace-Id": "abc123"}</code>'; hdHint.classList.remove('bad'); hd.classList.remove('bad'); }
+    catch (e) { okv = false; hdHint.textContent = '✗ ' + e.message; hdHint.classList.add('bad'); hd.classList.add('bad'); }
+    if (!byId('url').value.trim()) { okv = false; byId('url').classList.add('bad'); } else byId('url').classList.remove('bad');
+    return okv;
   }
 
   function buildRequest() {
-    const payload = JSON.parse($('payload').value);
-    const extra = JSON.parse($('headers').value || '{}');
-    let token = $('jwt').value.trim();
+    const payload = JSON.parse(byId('payload').value);
+    const extra = JSON.parse(byId('headers').value || '{}');
+    let token = byId('jwt').value.trim();
     if (token.toLowerCase().startsWith('bearer ')) token = token.slice(7).trim();
-    const method = $('method').value;
+    const method = byId('method').value;
     const hasBody = method !== 'GET' && method !== 'HEAD';
     const base = { 'Accept': 'application/json, text/plain, */*' };
     if (hasBody) base['Content-Type'] = 'application/json';
     const headers = { ...base, ...extra };
     if (token) headers['Authorization'] = 'Bearer ' + token;
+    return { url: byId('url').value.trim(), method, headers, body: hasBody ? JSON.stringify(payload) : null };
+  }
+
+  /* ---------- stats ---------- */
+  function stats() {
+    const end = endAt || performance.now();
+    const elapsed = Math.max(0, (end - startAt) / 1000);
+    const sorted = [...latencies].sort((a, b) => a - b);
     return {
-      url: $('url').value.trim(),
-      method,
-      headers,
-      body: hasBody ? JSON.stringify(payload) : null,
+      sent, ok, fail, inflight, total, elapsed,
+      rate: sent ? (ok / sent) * 100 : null,
+      throughput: elapsed > 0 ? sent / elapsed : 0,
+      avg: latencies.length ? latSum / latencies.length : 0,
+      min: sorted.length ? sorted[0] : 0,
+      max: sorted.length ? sorted[sorted.length - 1] : 0,
+      p50: pc(sorted, .5), p75: pc(sorted, .75), p90: pc(sorted, .9), p95: pc(sorted, .95), p99: pc(sorted, .99),
+      progress: total ? Math.min(100, (sent / total) * 100) : 0,
+      sorted,
     };
   }
 
-  // ---- Fire ----
+  /* ---------- render (KPIs / progress, with calm smoothing) ---------- */
+  function render(snap) {
+    const st = stats();
+    const lerp = (a, b) => a + (b - a) * 0.3;
+    if (snap) { disp.sent = st.sent; disp.fail = st.fail; disp.rps = st.throughput; disp.p95 = st.p95; disp.p99 = st.p99; disp.rate = st.rate || 0; }
+    else { disp.sent = lerp(disp.sent, st.sent); disp.fail = lerp(disp.fail, st.fail); disp.rps = lerp(disp.rps, st.throughput); disp.p95 = lerp(disp.p95, st.p95); disp.p99 = lerp(disp.p99, st.p99); disp.rate = lerp(disp.rate, st.rate || 0); }
+    byId('kSent').textContent = Math.round(disp.sent);
+    byId('kFail').textContent = Math.round(disp.fail);
+    byId('kRps').textContent = disp.rps.toFixed(1);
+    byId('kP95').textContent = Math.round(disp.p95);
+    byId('kP99').textContent = Math.round(disp.p99);
+    byId('kRate').textContent = st.rate == null ? '—' : disp.rate.toFixed(1);
+    $$('[data-bind="prog-w"]').forEach(e => e.style.width = st.progress + '%');
+    byId('inflight').textContent = st.inflight;
+    byId('elapsed').textContent = fmt(st.elapsed);
+    byId('cAll').textContent = st.sent;
+    if (running) $$('[data-proglabel]').forEach(e => e.textContent = `${st.sent} / ${st.total}`);
+    renderCodes();
+  }
+
+  /* ---------- responses / log ---------- */
+  let filterText = '';
+  function rowMatches(line) { return !filterText || line.textContent.toLowerCase().includes(filterText.toLowerCase()); }
+  function applyFilter() { $$('#log .lg').forEach(l => l.classList.toggle('hide', !rowMatches(l))); }
+
+  function addLogRow(resp) {
+    const logEl = byId('log');
+    if (!logEl.querySelector('.lg')) logEl.innerHTML = '';
+    const cls = resp.ok ? 's2' : (resp.kind === 'net' ? 'net' : 's' + String(resp.status)[0]);
+    const line = document.createElement('div');
+    line.className = 'lg'; line.dataset.rid = resp.id;
+    line.innerHTML = `<span class="lg-ts">${resp.ts}</span><span class="lg-id">#${resp.id}</span><span class="lg-co ${cls}">${escapeHtml(String(resp.status))}</span><span class="lg-m"></span>`;
+    line.querySelector('.lg-m').textContent = `${resp.latency}ms · ${oneLine(resp.body) || '(no body)'}`;
+    if (!rowMatches(line)) line.classList.add('hide');
+    logEl.prepend(line);
+    while (logEl.children.length > LOG_CAP) logEl.removeChild(logEl.lastChild);
+  }
+
+  function recordResponse(resp) {
+    responses.unshift(resp);
+    if (responses.length > LIVE_CAP) responses.pop();
+    statusCounts[resp.status] = (statusCounts[resp.status] || 0) + 1;
+    if (!resp.ok) {
+      const code = resp.status;
+      if (!errorGroups[code]) errorGroups[code] = { count: 0, sample: resp.body };
+      errorGroups[code].count++;
+      if (!errorGroups[code].sample && resp.body) errorGroups[code].sample = resp.body;
+    }
+    addLogRow(resp);
+  }
+
+  function renderCodes() {
+    const el = byId('codes'); el.innerHTML = '';
+    for (const [c, n] of Object.entries(statusCounts)) {
+      const net = c === 'TIMEOUT' || c === 'NET' || c === 'ABORT';
+      const sp = document.createElement('span');
+      sp.className = 'chip ' + (net ? 'net' : 's' + String(c)[0]);
+      sp.textContent = `${c}·${n}`; el.appendChild(sp);
+    }
+  }
+
+  function renderErrors() {
+    const el = byId('errors'), keys = Object.keys(errorGroups);
+    if (!keys.length) { el.innerHTML = `<div class="empty"><span>No errors. Failed requests are grouped here by status code with a sample body.</span></div>`; byId('cErr').textContent = '0'; return; }
+    let html = '', tot = 0;
+    for (const [code, info] of Object.entries(errorGroups)) {
+      tot += info.count;
+      const net = code === 'TIMEOUT' || code === 'NET' || code === 'ABORT';
+      html += `<div class="err-card ${net ? 'warn' : ''}"><div class="ec-head"><div class="ec-code">${escapeHtml(code)}</div><div class="ec-n">${info.count} occurrence${info.count !== 1 ? 's' : ''}</div></div><div class="ec-s">${escapeHtml((info.sample || '(no body)').slice(0, 600))}</div></div>`;
+    }
+    el.innerHTML = html; byId('cErr').textContent = tot;
+  }
+
+  function renderSummary() {
+    const el = byId('sum'), st = stats();
+    if (!st.sent) { el.innerHTML = `<div class="empty"><span>A full breakdown appears here after a run.</span></div>`; return; }
+    el.innerHTML = `
+      <div class="sum-h">Volume</div>
+      <div class="sum-row"><span class="sum-k">Sent</span><span class="sum-v">${st.sent}</span></div>
+      <div class="sum-row"><span class="sum-k">Successful</span><span class="sum-v ok">${st.ok}</span></div>
+      <div class="sum-row"><span class="sum-k">Failed</span><span class="sum-v ${st.fail ? 'err' : ''}">${st.fail}</span></div>
+      <div class="sum-row"><span class="sum-k">Success rate</span><span class="sum-v">${(st.rate || 0).toFixed(2)}%</span></div>
+      <div class="sum-h">Throughput</div>
+      <div class="sum-row"><span class="sum-k">Duration</span><span class="sum-v">${st.elapsed.toFixed(2)}s</span></div>
+      <div class="sum-row"><span class="sum-k">Avg req/s</span><span class="sum-v">${st.throughput.toFixed(2)}</span></div>
+      <div class="sum-h">Latency</div>
+      <div class="sum-row"><span class="sum-k">Min / Max</span><span class="sum-v">${Math.round(st.min)} / ${Math.round(st.max)} ms</span></div>
+      <div class="sum-row"><span class="sum-k">Average</span><span class="sum-v">${Math.round(st.avg)} ms</span></div>
+      <div class="sum-row"><span class="sum-k">p50 / p90</span><span class="sum-v">${st.p50} / ${st.p90} ms</span></div>
+      <div class="sum-row"><span class="sum-k">p95 / p99</span><span class="sum-v">${st.p95} / ${st.p99} ms</span></div>`;
+  }
+
+  /* ---------- response detail drawer ---------- */
+  function openDetail(rid) {
+    const resp = responses.find(r => String(r.id) === String(rid));
+    if (!resp) return;
+    const req = currentReq || {};
+    byId('detTitle').textContent = `Response #${resp.id}`;
+    byId('detSub').textContent = `${resp.status} · ${resp.latency}ms · ${resp.ts}`;
+    let reqHeaders = req.headers ? Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\n') : '';
+    const body = byId('detBody');
+    body.innerHTML = `
+      <div class="det-sec">
+        <div class="det-h">Request</div>
+        <div class="det-row"><span class="k">Method</span><span class="v">${escapeHtml(req.method || '—')}</span></div>
+        <div class="det-row"><span class="k">URL</span><span class="v">${escapeHtml(req.url || '—')}</span></div>
+        ${reqHeaders ? `<div class="det-h" style="margin-top:14px">Request Headers</div><div class="det-body">${escapeHtml(reqHeaders)}</div>` : ''}
+        ${req.body ? `<div class="det-h" style="margin-top:14px">Request Body</div><div class="det-body">${escapeHtml(prettyMaybe(req.body))}</div>` : ''}
+      </div>
+      <div class="det-sec">
+        <div class="det-h">Response</div>
+        <div class="det-row"><span class="k">Status</span><span class="v">${escapeHtml(String(resp.status))}</span></div>
+        <div class="det-row"><span class="k">Latency</span><span class="v">${resp.latency} ms</span></div>
+        <div class="det-row"><span class="k">Outcome</span><span class="v">${resp.ok ? 'OK' : 'FAILED'}</span></div>
+        <div class="det-h" style="margin-top:14px">Response Body</div>
+        <div class="det-body">${resp.body ? escapeHtml(prettyMaybe(resp.body)) : '<span class="det-empty">(empty body)</span>'}</div>
+      </div>`;
+    openDrawer('detDrawer');
+  }
+  function prettyMaybe(s) { try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return String(s); } }
+
+  /* ---------- charts ---------- */
+  const cv = { thr: byId('cThr'), lat: byId('cLat'), dist: byId('cDist') };
+  const cx = {}; for (const k in cv) cx[k] = cv[k].getContext('2d');
+  function resizeAll() {
+    for (const k in cv) { const c = cv[k], r = c.getBoundingClientRect(); if (!r.width || !r.height) continue; const d = window.devicePixelRatio || 1; c.width = r.width * d; c.height = r.height * d; cx[k].setTransform(d, 0, 0, d, 0, 0); }
+  }
+  const COL = () => ({
+    grid: cvar('--ch-grid', '#eae8e0'), axis: cvar('--ch-axis', '#a8a69c'),
+    rps: cvar('--ch-rps', '#16150f'), lat: cvar('--ch-lat', '#e23b1f'),
+    p50: cvar('--ch-p50', '#9a988e'), p95: cvar('--ch-p95', '#c47b14'), p99: cvar('--ch-p99', '#e23b1f'),
+    ok: cvar('--ch-ok', '#1f7a3d'), warn: cvar('--ch-warn', '#c47b14'), err: cvar('--ch-err', '#e23b1f'),
+    fill: cvar('--ch-fill', 'rgba(20,21,15,.05)'),
+  });
+  function grid(ctx, W, H, pL, pR, pT, pB, c) {
+    ctx.strokeStyle = c.grid; ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) { const y = pT + ((H - pT - pB) / 4) * i; ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke(); }
+  }
+  function line(ctx, pts, color, w) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+
+  function drawThr() {
+    const c = cv.thr, ctx = cx.thr, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
+    const s = series, em = byId('emThr');
+    if (s.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
+    const col = COL(), pL = 44, pR = 46, pT = 12, pB = 22; grid(ctx, W, H, pL, pR, pT, pB, col);
+    const cw = W - pL - pR, ch = H - pT - pB;
+    const mR = Math.max(1, arrMax(s.map(p => p.rps))) * 1.25, mL = Math.max(1, arrMax(s.map(p => p.avgLatency))) * 1.25;
+    const t0 = s[0].t, tN = Math.max(s[s.length - 1].t, t0 + 1), xA = t => pL + ((t - t0) / (tN - t0)) * cw;
+    ctx.beginPath(); s.forEach((p, i) => { const x = xA(p.t), y = pT + ch - (p.rps / mR) * ch; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.lineTo(xA(s[s.length - 1].t), pT + ch); ctx.lineTo(xA(s[0].t), pT + ch); ctx.closePath(); ctx.fillStyle = col.fill; ctx.fill();
+    line(ctx, s.map(p => ({ x: xA(p.t), y: pT + ch - (p.rps / mR) * ch })), col.rps, 2.2);
+    line(ctx, s.map(p => ({ x: xA(p.t), y: pT + ch - (p.avgLatency / mL) * ch })), col.lat, 2);
+    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.rps; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) ctx.fillText((mR * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
+    ctx.fillStyle = col.lat; ctx.textAlign = 'left';
+    for (let i = 0; i <= 4; i++) ctx.fillText((mL * (1 - i / 4)).toFixed(0), W - pR + 6, pT + (ch / 4) * i + 3);
+  }
+  function drawLat() {
+    const c = cv.lat, ctx = cx.lat, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
+    const s = series.filter(p => p.p99 > 0), em = byId('emLat');
+    if (s.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
+    const col = COL(), pL = 50, pR = 18, pT = 12, pB = 22; grid(ctx, W, H, pL, pR, pT, pB, col);
+    const cw = W - pL - pR, ch = H - pT - pB;
+    const mL = Math.max(1, arrMax(s.map(p => p.p99))) * 1.2, t0 = s[0].t, tN = Math.max(s[s.length - 1].t, t0 + 1);
+    const xA = t => pL + ((t - t0) / (tN - t0)) * cw, yA = v => pT + ch - (v / mL) * ch;
+    [['p50', col.p50], ['p95', col.p95], ['p99', col.p99]].forEach(([k, color]) => line(ctx, s.map(p => ({ x: xA(p.t), y: yA(p[k]) })), color, 2));
+    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.axis; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) ctx.fillText((mL * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
+  }
+  function drawDist() {
+    const c = cv.dist, ctx = cx.dist, r = c.getBoundingClientRect(), W = r.width, H = r.height; if (!W || !H) return; ctx.clearRect(0, 0, W, H);
+    const L = [...latencies].sort((a, b) => a - b), em = byId('emDist');
+    if (L.length < 2) { em.style.display = ''; return; } em.style.display = 'none';
+    const col = COL(), pL = 44, pR = 16, pT = 12, pB = 34, cw = W - pL - pR, ch = H - pT - pB;
+    const p99 = pc(L, .99), upper = Math.max(p99, 10), bins = 22, bw = upper / bins, counts = new Array(bins).fill(0);
+    for (const l of L) counts[Math.min(bins - 1, Math.floor(l / bw))]++;
+    const mx = Math.max(arrMax(counts), 1); grid(ctx, W, H, pL, pR, pT, pB, col);
+    const p50 = pc(L, .5), p95 = pc(L, .95), bwpx = cw / bins;
+    for (let i = 0; i < bins; i++) {
+      const h = (counts[i] / mx) * ch, x = pL + i * bwpx + 2, y = pT + ch - h, st = i * bw;
+      let color = col.ok; if (st >= p95) color = col.err; else if (st >= p50) color = col.warn;
+      ctx.fillStyle = color; ctx.fillRect(x, y, bwpx - 4, h);
+    }
+    ctx.font = '10px var(--mono)'; ctx.fillStyle = col.axis; ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) ctx.fillText((mx * (1 - i / 4)).toFixed(0), pL - 6, pT + (ch / 4) * i + 3);
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 4; i++) ctx.fillText((upper * i / 4).toFixed(0) + 'ms', pL + (cw / 4) * i, pT + ch + 16);
+  }
+  function drawAll() { drawThr(); drawLat(); drawDist(); }
+
+  function sample() {
+    const now = performance.now(), dt = (now - lastSampleAt) / 1000; if (dt <= 0) return;
+    const instRps = (sent - lastSent) / dt, st = stats();
+    series.push({ t: (now - startAt) / 1000, rps: instRps, avgLatency: st.avg, p50: st.p50, p95: st.p95, p99: st.p99 });
+    if (series.length > 400) series.shift();
+    lastSampleAt = now; lastSent = sent;
+    drawAll();
+  }
+
+  /* ---------- fire one request (own AbortController = timeout isolation) ---------- */
   async function fireOne(cfg, id, timeout) {
-    stats.inflight++;
+    inflight++;
     const t0 = performance.now();
-    // Each request gets its OWN AbortController, so a single request hitting the
-    // timeout can't tear down every other in-flight (and future) request. We still
-    // honour the run-wide stop signal (abortCtl) by forwarding it to this one.
-    const ctl = new AbortController();
-    const runSignal = abortCtl;
+    const ctl = new AbortController(), runSignal = abortCtl;
     let timedOut = false;
     const onStop = () => ctl.abort();
-    if (runSignal) {
-      if (runSignal.signal.aborted) ctl.abort();
-      else runSignal.signal.addEventListener('abort', onStop, { once: true });
-    }
+    if (runSignal) { if (runSignal.signal.aborted) ctl.abort(); else runSignal.signal.addEventListener('abort', onStop, { once: true }); }
     const timer = setTimeout(() => { timedOut = true; ctl.abort(); }, timeout);
+    const ts = new Date().toTimeString().slice(0, 8);
     try {
       const res = await fetch(cfg.url, { method: cfg.method, headers: cfg.headers, body: cfg.body ?? undefined, signal: ctl.signal });
       const txt = await res.text();
       const dt = performance.now() - t0;
       latencies.push(dt); latSum += dt;
-      if (res.ok) {
-        stats.ok++;
-        addLog(id, res.status, 's2', `${Math.round(dt)}ms · ${txt.slice(0, 120)}`);
-      } else {
-        stats.fail++;
-        addLog(id, res.status, 's' + String(res.status)[0], `${Math.round(dt)}ms · ${txt.slice(0, 160)}`);
-        bumpError(String(res.status), txt.slice(0, 600));
-      }
-      bumpStatus(res.status);
-      return { ok: res.ok, status: res.status };
+      const okr = res.ok; if (okr) ok++; else fail++;
+      recordResponse({ id, status: res.status, ok: okr, kind: okr ? '2' : String(res.status)[0], latency: Math.round(dt), ts, body: txt.slice(0, 12000) });
+      return { ok: okr, status: res.status };
     } catch (e) {
-      const dt = performance.now() - t0;
-      if (timedOut) {
-        stats.fail++;
-        addLog(id, 'TIMEOUT', 'net', `timed out after ${Math.round(dt)}ms`);
-        bumpStatus('TIMEOUT');
-        bumpError('TIMEOUT', `Request exceeded the ${timeout}ms timeout.`);
-      } else if (e && e.name === 'AbortError') {
-        stats.fail++;
-        addLog(id, 'ABORT', 'net', `aborted after ${Math.round(dt)}ms`);
-        bumpStatus('ABORT');
-        bumpError('ABORT', 'Request aborted (test stopped).');
-      } else {
-        stats.fail++;
-        const msg = e.message || String(e);
-        addLog(id, 'NET', 'net', `${Math.round(dt)}ms · ${msg}`);
-        bumpStatus('NET');
-        bumpError('NET', msg);
-      }
+      const dt = performance.now() - t0; fail++;
+      if (timedOut) recordResponse({ id, status: 'TIMEOUT', ok: false, kind: 'net', latency: Math.round(dt), ts, body: `Request exceeded the ${timeout}ms timeout.` });
+      else if (e && e.name === 'AbortError') recordResponse({ id, status: 'ABORT', ok: false, kind: 'net', latency: Math.round(dt), ts, body: 'Request aborted (test stopped).' });
+      else recordResponse({ id, status: 'NET', ok: false, kind: 'net', latency: Math.round(dt), ts, body: e.message || String(e) });
       return { ok: false, status: timedOut ? 'TIMEOUT' : 'NET' };
     } finally {
       clearTimeout(timer);
       if (runSignal) runSignal.signal.removeEventListener('abort', onStop);
-      stats.inflight--;
-      stats.sent++;
-      renderKpis();
+      inflight--; sent++;
       if (pumpTick) pumpTick();
     }
   }
 
-  function resetRun(planned, cfg) {
-    stats.sent = 0; stats.ok = 0; stats.fail = 0; stats.inflight = 0;
-    latencies = []; latSum = 0;
-    series.length = 0;
-    for (const k of Object.keys(statusCounts)) delete statusCounts[k];
-    for (const k of Object.keys(errorGroups)) delete errorGroups[k];
-    statusCodesEl.innerHTML = '';
-    logEl.innerHTML = `<div class="empty" id="logEmpty"><div class="icon-wrap"><svg class="icon"><use href="#i-inbox"/></svg></div><div class="t">Waiting for responses…</div><div class="d">Responses will stream in here as soon as the first request completes.</div></div>`;
-    renderErrors();
-    totalPlanned = planned;
-    startAt = performance.now();
-    endAt = 0;
-    lastSampleAt = startAt; lastSampleSent = 0; lastSampleLatSum = 0; lastSampleLatCount = 0;
-    currentConfig = cfg;
-    drawAllCharts();
-    renderSummary();
+  /* ---------- run lifecycle ---------- */
+  function resetRun(planned, req) {
+    sent = ok = fail = inflight = launched = 0;
+    latencies = []; latSum = 0; series = []; responses = [];
+    statusCounts = {}; errorGroups = {};
+    disp.sent = disp.fail = disp.rps = disp.p95 = disp.p99 = disp.rate = 0;
+    total = planned; startAt = performance.now(); endAt = 0;
+    lastSampleAt = startAt; lastSent = 0;
+    currentReq = req;
+    byId('log').innerHTML = `<div class="empty"><span>Waiting for responses… they stream in here as soon as the first request resolves.</span></div>`;
+    renderCodes(); renderErrors(); renderSummary(); drawAll();
   }
 
   async function start() {
     if (running) return;
     exitViewing();
-    if (!validate()) { toast('Please fix the highlighted fields.', 'err'); return; }
-    const reqCfg = buildRequest();
-    const total = parseInt($('total').value, 10);
-    const rps = parseFloat($('rps').value);
-    const concurrency = parseInt($('concurrency').value, 10);
-    const timeout = parseInt($('timeout').value, 10);
+    if (!validate()) { toast('Fix the highlighted fields first.', 'err'); return; }
+    const req = buildRequest();
+    const totalN = parseInt(byId('total').value, 10);
+    const rps = parseFloat(byId('rps').value);
+    const conc = parseInt(byId('concurrency').value, 10);
+    const timeout = parseInt(byId('timeout').value, 10);
+    ['total', 'rps', 'concurrency', 'timeout'].forEach(id => byId(id).classList.remove('bad'));
+    const bad = (id, msg) => { byId(id).classList.add('bad'); byId(id).focus(); toast(msg, 'err'); };
+    if (!Number.isFinite(totalN) || totalN < 1) return bad('total', 'Total must be a whole number ≥ 1.');
+    if (!Number.isFinite(rps) || rps <= 0) return bad('rps', 'Rate must be greater than 0.');
+    if (!Number.isFinite(conc) || conc < 1) return bad('concurrency', 'In-flight must be ≥ 1.');
+    if (!Number.isFinite(timeout) || timeout < 1) return bad('timeout', 'Timeout must be ≥ 1 ms.');
 
-    ['total', 'rps', 'concurrency', 'timeout'].forEach(id => $(id).classList.remove('invalid'));
-    const badNum = (id, msg) => { $(id).classList.add('invalid'); $(id).focus(); toast(msg, 'err'); };
-    if (!Number.isFinite(total) || total < 1) return badNum('total', 'Total requests must be a whole number ≥ 1.');
-    if (!Number.isFinite(rps) || rps <= 0) return badNum('rps', 'Rate must be greater than 0.');
-    if (!Number.isFinite(concurrency) || concurrency < 1) return badNum('concurrency', 'Max in-flight must be ≥ 1.');
-    if (!Number.isFinite(timeout) || timeout < 1) return badNum('timeout', 'Timeout must be ≥ 1 ms.');
+    running = true; abortCtl = new AbortController();
+    resetRun(totalN, req);
+    byId('startBtn').disabled = true; byId('testBtn').disabled = true; byId('stopBtn').disabled = false;
+    setStatus('Running', 'running');
+    render(true);
 
-    running = true;
-    document.body.classList.add('is-running');
-    abortCtl = new AbortController();
-    resetRun(total, { url: reqCfg.url, method: reqCfg.method, total, rps, concurrency, timeout });
-
-    $('start').disabled = true;
-    $('testOne').disabled = true;
-    $('stop').disabled = false;
-    $('statusPill').className = 'status-pill running';
-    $('statusText').textContent = 'Running';
-    $('progressLabel').textContent = 'Running…';
-    $('progressSub').textContent = '';
-    renderKpis();
-
-    const sampler = wInterval(sample, 500);
-    const ticker = wInterval(() => { renderKpis(); renderSummary(); }, 250);
-
-    // Schedule-driven launcher: rather than sleeping between each request (which a
-    // background tab throttles to ~1/s), we compute how many requests are due by
-    // now from the wall clock and fire enough to catch up — capped by the in-flight
-    // limit. Driven by a Worker timer plus a nudge from each completion, so it keeps
-    // its target rate even when the tab is hidden.
+    const sampler = wInterval(sample, 380);
+    const ticker = wInterval(() => render(false), 100);
     const intervalMs = 1000 / rps;
-    let launched = 0;
     const runStart = performance.now();
     await new Promise(resolve => {
       let handle = null;
       pumpTick = () => {
-        if (running && launched < total) {
+        if (running && launched < totalN) {
           const elapsed = performance.now() - runStart;
-          const due = Math.min(total, Math.floor(elapsed / intervalMs) + 1);
-          while (launched < due && stats.inflight < concurrency && running) {
-            fireOne(reqCfg, ++launched, timeout);
-          }
+          const due = Math.min(totalN, Math.floor(elapsed / intervalMs) + 1);
+          while (launched < due && inflight < conc && running) fireOne(req, ++launched, timeout);
         }
-        if ((!running || launched >= total) && stats.inflight === 0) {
-          wClear(handle);
-          pumpTick = null;
-          resolve();
-        }
+        if ((!running || launched >= totalN) && inflight === 0) { wClear(handle); pumpTick = null; resolve(); }
       };
       handle = wInterval(pumpTick, Math.max(5, Math.min(50, intervalMs)));
       pumpTick();
     });
-
-    wClear(sampler);
-    wClear(ticker);
-    sample();
+    wClear(sampler); wClear(ticker); sample();
     endAt = performance.now();
-    renderKpis();
-    renderSummary();
-
-    const wasStopped = !running;
-    running = false;
-    document.body.classList.remove('is-running');
-    $('start').disabled = false;
-    $('testOne').disabled = false;
-    $('stop').disabled = true;
-
-    if (wasStopped) {
-      $('statusPill').className = 'status-pill';
-      $('statusText').textContent = 'Stopped';
-      $('progressLabel').textContent = `Stopped at ${stats.sent} / ${totalPlanned}`;
-    } else {
-      $('statusPill').className = 'status-pill done';
-      $('statusText').textContent = 'Completed';
-      $('progressLabel').textContent = `Completed — ${stats.sent} sent`;
-      $('progressSub').textContent = `${stats.ok} ok · ${stats.fail} failed`;
-      toast(`Test finished — ${stats.ok} ok, ${stats.fail} failed`, stats.fail ? 'err' : 'ok');
+    const wasStopped = !running; running = false;
+    byId('startBtn').disabled = false; byId('testBtn').disabled = false; byId('stopBtn').disabled = true;
+    render(true); renderSummary(); renderErrors();
+    if (wasStopped) { setStatus('Stopped', 'state-stopped'); $$('[data-proglabel]').forEach(e => e.textContent = `Stopped · ${sent} / ${total}`); }
+    else {
+      setStatus(fail ? 'Complete' : 'Complete', fail ? 'state-err' : 'state-done');
+      $$('[data-proglabel]').forEach(e => e.textContent = 'Complete');
+      toast(`Run finished — ${ok} ok, ${fail} failed`, fail ? 'err' : 'ok');
     }
     saveRun();
   }
 
-  function stop() {
-    if (!running) return;
-    running = false;
-    try { abortCtl.abort(); } catch {}
-  }
+  function stop() { if (!running) return; running = false; try { abortCtl.abort(); } catch {} }
 
-  async function testOne() {
+  async function probe() {
     if (running) return;
     exitViewing();
-    if (!validate()) { toast('Please fix the highlighted fields.', 'err'); return; }
-    const reqCfg = buildRequest();
-    const timeout = parseInt($('timeout').value, 10) || 30000;
-    abortCtl = new AbortController();
-    resetRun(1, { url: reqCfg.url, method: reqCfg.method, total: 1, rps: 1, concurrency: 1, timeout });
-    running = true;
-    $('testOne').disabled = true; $('start').disabled = true;
-    $('statusPill').className = 'status-pill running';
-    $('statusText').textContent = 'Sending test';
-    const r = await fireOne(reqCfg, 1, timeout);
-    endAt = performance.now();
-    running = false;
-    $('testOne').disabled = false; $('start').disabled = false;
-    if (r.ok) {
-      $('statusPill').className = 'status-pill done';
-      $('statusText').textContent = 'Test OK';
-      toast(`Test request succeeded (${r.status})`, 'ok');
-    } else {
-      $('statusPill').className = 'status-pill error';
-      $('statusText').textContent = 'Test failed';
-      toast(`Test request failed (${r.status})`, 'err');
-    }
-    $('progressLabel').textContent = 'Ready when you are';
-    $('progressSub').textContent = 'Configure your test on the left, then hit Start.';
-    renderSummary();
+    if (!validate()) { toast('Fix the highlighted fields first.', 'err'); return; }
+    const req = buildRequest();
+    const timeout = parseInt(byId('timeout').value, 10) || 30000;
+    running = true; abortCtl = new AbortController();
+    resetRun(1, req);
+    byId('startBtn').disabled = true; byId('testBtn').disabled = true; byId('stopBtn').disabled = false;
+    setStatus('Probing', 'running'); render(true);
+    const sampler = wInterval(sample, 380), ticker = wInterval(() => render(false), 100);
+    const r = await fireOne(req, 1, timeout);
+    wClear(sampler); wClear(ticker); sample();
+    endAt = performance.now(); running = false;
+    byId('startBtn').disabled = false; byId('testBtn').disabled = false; byId('stopBtn').disabled = true;
+    render(true); renderSummary(); renderErrors();
+    if (r.ok) { setStatus('Complete', 'state-done'); toast(`Probe succeeded (${r.status})`, 'ok'); }
+    else { setStatus('Complete', 'state-err'); toast(`Probe failed (${r.status})`, 'err'); }
+    $$('[data-proglabel]').forEach(e => e.textContent = 'Complete');
+    saveRun();
   }
 
-  // ---- History ----
-  const HISTORY_KEY = 'jmetter.history';
-  const HISTORY_MAX = 10;
-  function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+  /* ---------- history ---------- */
+  const HKEY = 'jmetter.history', HMAX = 10;
+  function loadHistory() { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch { return []; } }
   function saveHistory(list) {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-    const c = list.length;
-    $('historyBadge').textContent = c > 0 ? c : '';
+    let l = list.slice();
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try { localStorage.setItem(HKEY, JSON.stringify(l)); byId('histBadge').textContent = l.length ? ' ' + l.length : ''; return; }
+      catch (e) {
+        // Quota exceeded — drop the oldest unpinned run, then the heaviest data, and retry.
+        const idx = [...l].reverse().findIndex(r => !r.pinned);
+        if (idx >= 0) l.splice(l.length - 1 - idx, 1);
+        else if (l.length) l[l.length - 1].responses = [];
+        else return;
+      }
+    }
   }
   function saveRun() {
-    if (!stats.sent) return;
-    const elapsed = ((endAt || performance.now()) - startAt) / 1000;
-    const cfg = currentConfig || {};
+    if (!sent) return;
+    const st = stats(), elapsed = ((endAt || performance.now()) - startAt) / 1000;
     const run = {
-      id: Date.now(),
-      startedAt: Date.now() - Math.round(elapsed * 1000),
-      endedAt: Date.now(),
-      duration: elapsed,
-      config: cfg,
-      payload: $('payload').value,
-      stats: { sent: stats.sent, ok: stats.ok, fail: stats.fail },
-      latencies: {
-        min: latencies.length ? arrMin(latencies) : 0,
-        max: latencies.length ? arrMax(latencies) : 0,
-        avg: latencies.length ? latSum / latencies.length : 0,
-        p50: percentile(latencies, 0.5),
-        p75: percentile(latencies, 0.75),
-        p90: percentile(latencies, 0.9),
-        p95: percentile(latencies, 0.95),
-        p99: percentile(latencies, 0.99),
-        samples: latencies.length > 2000 ? latencies.filter((_, i) => i % Math.ceil(latencies.length / 2000) === 0) : [...latencies],
-      },
-      statusCounts: { ...statusCounts },
+      id: Date.now(), endedAt: Date.now(), duration: elapsed,
+      config: { url: currentReq.url, method: currentReq.method, total, rps: parseFloat(byId('rps').value), concurrency: parseInt(byId('concurrency').value, 10), timeout: parseInt(byId('timeout').value, 10) },
+      reqHeaders: currentReq.headers, payload: currentReq.body || '',
+      stats: { sent, ok, fail }, statusCounts: { ...statusCounts },
       errorGroups: JSON.parse(JSON.stringify(errorGroups)),
+      latency: { min: st.min, max: st.max, avg: st.avg, p50: st.p50, p75: st.p75, p90: st.p90, p95: st.p95, p99: st.p99 },
+      latSamples: latencies.length > 1500 ? latencies.filter((_, i) => i % Math.ceil(latencies.length / 1500) === 0) : [...latencies],
       series: series.length > 300 ? series.filter((_, i) => i % Math.ceil(series.length / 300) === 0) : [...series],
+      // keep response data so a saved run can replay its responses (capped for storage)
+      responses: responses.slice(0, 120).map(r => ({ id: r.id, status: r.status, ok: r.ok, kind: r.kind, latency: r.latency, ts: r.ts, body: String(r.body || '').slice(0, 1500) })),
       pinned: false,
     };
-    const list = loadHistory();
-    list.unshift(run);
-    // Keep all pinned + up to HISTORY_MAX total
-    const pinned = list.filter(r => r.pinned);
-    const unpinned = list.filter(r => !r.pinned);
-    while (pinned.length + unpinned.length > HISTORY_MAX && unpinned.length > 0) unpinned.pop();
-    saveHistory([...pinned, ...unpinned]);
-    renderDrawer();
+    const list = loadHistory(); list.unshift(run);
+    const pinned = list.filter(r => r.pinned), unpinned = list.filter(r => !r.pinned);
+    while (pinned.length + unpinned.length > HMAX && unpinned.length) unpinned.pop();
+    saveHistory([...pinned, ...unpinned]); renderDrawer();
   }
-
   function renderDrawer() {
-    const list = loadHistory();
-    $('historyBadge').textContent = list.length > 0 ? list.length : '';
-    const body = $('drawerBody');
-    if (!list.length) {
-      body.innerHTML = `<div class="drawer-empty"><div class="icon-wrap"><svg class="icon"><use href="#i-history"/></svg></div><div class="t">No runs yet</div><div class="d">Your last 10 test runs will be saved here automatically. Pin runs to keep them around longer.</div></div>`;
-      return;
-    }
+    const list = loadHistory(); byId('histBadge').textContent = list.length ? ' ' + list.length : '';
+    const body = byId('histBody');
+    if (!list.length) { body.innerHTML = `<div class="empty" style="height:60%"><span>No runs yet. Your last 10 runs are saved here automatically — pin one to keep it.</span></div>`; return; }
     body.innerHTML = list.map(run => {
       const rate = run.stats.sent ? (run.stats.ok / run.stats.sent * 100) : 0;
-      const badgeClass = run.stats.fail === 0 ? 'ok' : run.stats.ok === 0 ? 'err' : 'mix';
-      const badgeText = run.stats.fail === 0 ? 'Pass' : run.stats.ok === 0 ? 'Fail' : `${rate.toFixed(0)}%`;
-      const isViewing = viewingRun && viewingRun.id === run.id;
-      return `<div class="run-card ${isViewing ? 'viewing' : ''} ${run.pinned ? 'pinned' : ''}" data-id="${run.id}">
-        <div class="run-card-head">
-          <div>
-            <div class="run-card-title">${escapeHtml(run.config.method || 'POST')} · ${run.stats.sent} req @ ${run.config.rps || 0}/s</div>
-            <div class="run-card-time">${fmtAgo(run.endedAt)} · ${run.duration.toFixed(1)}s</div>
-          </div>
-          <span class="run-card-badge ${badgeClass}">${badgeText}</span>
-        </div>
-        <div class="run-card-stats">
-          <div><span class="lbl">Success</span><span class="vv" style="color:var(--ok)">${run.stats.ok}</span></div>
-          <div><span class="lbl">Failed</span><span class="vv" style="color:${run.stats.fail ? 'var(--err)' : 'var(--text)'}">${run.stats.fail}</span></div>
-          <div><span class="lbl">Avg</span><span class="vv">${Math.round(run.latencies.avg)}ms</span></div>
-          <div><span class="lbl">p95</span><span class="vv">${run.latencies.p95}ms</span></div>
-        </div>
-        <div class="run-card-actions">
-          <button data-act="view" data-id="${run.id}" title="View this run"><svg class="icon" style="width:12px;height:12px;"><use href="#i-search"/></svg> View</button>
-          <button data-act="rerun" data-id="${run.id}" title="Load config and rerun"><svg class="icon" style="width:12px;height:12px;"><use href="#i-rerun"/></svg> Rerun</button>
-          <button data-act="pin" data-id="${run.id}" title="${run.pinned ? 'Unpin' : 'Pin to keep'}"><svg class="icon" style="width:12px;height:12px;"><use href="#i-pin"/></svg> ${run.pinned ? 'Unpin' : 'Pin'}</button>
-          <button data-act="export" data-id="${run.id}" title="Export as JSON"><svg class="icon" style="width:12px;height:12px;"><use href="#i-download"/></svg></button>
-          <button data-act="del" data-id="${run.id}" class="danger" title="Delete"><svg class="icon" style="width:12px;height:12px;"><use href="#i-trash"/></svg></button>
-        </div>
+      const cls = run.stats.fail === 0 ? 'ok' : run.stats.ok === 0 ? 'err' : 'mix';
+      const txt = run.stats.fail === 0 ? 'Pass' : run.stats.ok === 0 ? 'Fail' : `${rate.toFixed(0)}%`;
+      const view = viewing && viewing.id === run.id;
+      return `<div class="run-card ${view ? 'viewing' : ''} ${run.pinned ? 'pinned' : ''}" data-id="${run.id}">
+        <div class="rc-head"><div><div class="rc-title">${escapeHtml(run.config.method || 'POST')} · ${run.stats.sent} req @ ${run.config.rps || 0}/s</div><div class="rc-time">${fmtAgo(run.endedAt)} · ${run.duration.toFixed(1)}s · ${(run.responses || []).length} bodies</div></div><span class="rc-badge ${cls}">${txt}</span></div>
+        <div class="rc-stats"><div><div class="l">OK</div><div class="v" style="color:var(--ok)">${run.stats.ok}</div></div><div><div class="l">Fail</div><div class="v" style="color:${run.stats.fail ? 'var(--red)' : 'var(--ink)'}">${run.stats.fail}</div></div><div><div class="l">Avg</div><div class="v">${Math.round(run.latency.avg)}ms</div></div><div><div class="l">p95</div><div class="v">${run.latency.p95}ms</div></div></div>
+        <div class="rc-actions"><button data-act="view">View</button><button data-act="rerun">Rerun</button><button data-act="pin">${run.pinned ? 'Unpin' : 'Pin'}</button><button data-act="export">Export</button><button data-act="del" class="del">Del</button></div>
       </div>`;
     }).join('');
-
-    body.querySelectorAll('[data-act]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const id = parseInt(btn.dataset.id, 10);
-        const act = btn.dataset.act;
-        const run = loadHistory().find(r => r.id === id);
-        if (!run) return;
-        if (act === 'view') viewRun(run);
-        else if (act === 'rerun') rerunFromHistory(run);
-        else if (act === 'pin') togglePin(id);
-        else if (act === 'export') exportRun(run);
-        else if (act === 'del') deleteRun(id);
-      });
-    });
-
-    // The whole card is a click target for viewing (action buttons stopPropagation).
     body.querySelectorAll('.run-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const run = loadHistory().find(r => r.id === parseInt(card.dataset.id, 10));
-        if (run) viewRun(run);
-      });
+      const id = parseInt(card.dataset.id, 10);
+      card.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const run = loadHistory().find(r => r.id === id); if (!run) return;
+        const act = btn.dataset.act;
+        if (act === 'view') viewRun(run);
+        else if (act === 'rerun') rerun(run);
+        else if (act === 'pin') { const l = loadHistory(), r = l.find(x => x.id === id); if (r) { r.pinned = !r.pinned; saveHistory(l); renderDrawer(); toast(r.pinned ? 'Pinned' : 'Unpinned'); } }
+        else if (act === 'export') exportRun(run);
+        else if (act === 'del') { if (confirm('Delete this run?')) { saveHistory(loadHistory().filter(r => r.id !== id)); if (viewing && viewing.id === id) exitViewing(); renderDrawer(); } }
+      }));
+      card.addEventListener('click', () => { const run = loadHistory().find(r => r.id === id); if (run) viewRun(run); });
     });
-  }
-
-  function togglePin(id) {
-    const list = loadHistory();
-    const r = list.find(x => x.id === id);
-    if (r) { r.pinned = !r.pinned; saveHistory(list); renderDrawer(); toast(r.pinned ? 'Pinned' : 'Unpinned', 'info'); }
-  }
-  function deleteRun(id) {
-    if (!confirm('Delete this run from history?')) return;
-    const list = loadHistory().filter(r => r.id !== id);
-    saveHistory(list);
-    if (viewingRun && viewingRun.id === id) exitViewing();
-    renderDrawer();
   }
   function exportRun(run) {
     const blob = new Blob([JSON.stringify(run, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `jmetter-run-${new Date(run.endedAt).toISOString().replace(/[:.]/g, '-')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('Run exported as JSON', 'ok');
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = `jmetter-run-${new Date(run.endedAt).toISOString().replace(/[:.]/g, '-')}.json`; a.click();
+    URL.revokeObjectURL(url); toast('Run exported as JSON', 'ok');
   }
-  function rerunFromHistory(run) {
+  function rerun(run) {
     if (running) { toast('Stop the current run first', 'err'); return; }
-    if (run.config) {
-      $('url').value = run.config.url || $('url').value;
-      $('method').value = run.config.method || 'POST';
-      if (run.config.total) $('total').value = run.config.total;
-      if (run.config.rps) $('rps').value = run.config.rps;
-      if (run.config.concurrency) $('concurrency').value = run.config.concurrency;
-      if (run.config.timeout) $('timeout').value = run.config.timeout;
-    }
-    if (run.payload) $('payload').value = run.payload;
-    closeDrawer();
-    toast('Config loaded — starting test', 'info');
-    setTimeout(() => start(), 350);
+    if (run.config) { byId('url').value = run.config.url || byId('url').value; byId('method').value = run.config.method || 'POST';
+      if (run.config.total) byId('total').value = run.config.total; if (run.config.rps) byId('rps').value = run.config.rps;
+      if (run.config.concurrency) byId('concurrency').value = run.config.concurrency; if (run.config.timeout) byId('timeout').value = run.config.timeout; }
+    if (run.payload) byId('payload').value = run.payload;
+    closeDrawer(); toast('Config loaded — starting', ''); setTimeout(start, 320);
   }
-
   function viewRun(run) {
     if (running) { toast('Stop the current run before viewing history', 'err'); return; }
-    viewingRun = run;
-    $('viewingBanner').classList.add('show');
-    $('viewingLabel').textContent = new Date(run.endedAt).toLocaleString();
-
-    stats.sent = run.stats.sent;
-    stats.ok = run.stats.ok;
-    stats.fail = run.stats.fail;
-    stats.inflight = 0;
-    latencies = run.latencies.samples || [];
-    latSum = latencies.reduce((a, b) => a + b, 0);
-    series.length = 0;
-    series.push(...run.series);
-    Object.keys(statusCounts).forEach(k => delete statusCounts[k]);
-    Object.assign(statusCounts, run.statusCounts);
-    Object.keys(errorGroups).forEach(k => delete errorGroups[k]);
-    Object.assign(errorGroups, run.errorGroups);
-    startAt = performance.now() - run.duration * 1000;
-    endAt = performance.now();
-    totalPlanned = run.config.total || run.stats.sent;
-    currentConfig = run.config;
-
-    renderKpis();
-    renderStatusChips();
-    renderErrors();
-    drawAllCharts();
-    renderSummary();
-
-    $('progressLabel').textContent = `Run from ${new Date(run.endedAt).toLocaleTimeString()}`;
-    $('progressSub').textContent = `${run.stats.ok} ok · ${run.stats.fail} failed · ${run.duration.toFixed(1)}s`;
-    logEl.innerHTML = `<div class="empty"><div class="icon-wrap"><svg class="icon"><use href="#i-history"/></svg></div><div class="t">Historical run</div><div class="d">Use the Distribution, Summary, and Errors tabs for analysis. Response bodies aren't stored.</div></div>`;
-
-    closeDrawer();
-    renderDrawer();
+    viewing = run;
+    byId('viewBanner').classList.add('show'); byId('viewLabel').textContent = new Date(run.endedAt).toLocaleString();
+    sent = run.stats.sent; ok = run.stats.ok; fail = run.stats.fail; inflight = 0;
+    latencies = run.latSamples || []; latSum = latencies.reduce((a, b) => a + b, 0);
+    series = [...(run.series || [])];
+    statusCounts = { ...run.statusCounts }; errorGroups = JSON.parse(JSON.stringify(run.errorGroups || {}));
+    responses = (run.responses || []).slice();
+    currentReq = { url: run.config.url, method: run.config.method, headers: run.reqHeaders || {}, body: run.payload || '' };
+    total = run.config.total || run.stats.sent;
+    startAt = performance.now() - run.duration * 1000; endAt = performance.now();
+    render(true); renderCodes(); renderErrors(); renderSummary(); drawAll();
+    // rebuild the response log from stored responses
+    const logEl = byId('log');
+    if (responses.length) { logEl.innerHTML = ''; [...responses].reverse().forEach(addLogRow); }
+    else logEl.innerHTML = `<div class="empty"><span>This saved run kept no response bodies.</span></div>`;
+    $$('[data-proglabel]').forEach(e => e.textContent = `Saved · ${run.stats.sent} req`);
+    setStatus('Viewing', run.stats.fail ? 'state-err' : 'state-done');
+    closeDrawer(); renderDrawer();
   }
-
   function exitViewing() {
-    if (!viewingRun) return;
-    viewingRun = null;
-    $('viewingBanner').classList.remove('show');
-    resetRun(0, null);
-    renderKpis();
-    $('progressLabel').textContent = 'Ready when you are';
-    $('progressSub').textContent = 'Configure your test on the left, then hit Start.';
+    if (!viewing) return; viewing = null;
+    byId('viewBanner').classList.remove('show');
+    resetRun(0, null); render(true);
+    setStatus('Ready', ''); $$('[data-proglabel]').forEach(e => e.textContent = 'Ready');
+    byId('log').innerHTML = `<div class="empty"><span>Each response — time, code, latency — lists here as it arrives. Click a row for the full body.</span></div>`;
     renderDrawer();
   }
 
-  function openDrawer() { $('drawer').classList.add('show'); $('backdrop').classList.add('show'); $('drawer').setAttribute('aria-hidden', 'false'); renderDrawer(); }
-  function closeDrawer() { $('drawer').classList.remove('show'); $('backdrop').classList.remove('show'); $('drawer').setAttribute('aria-hidden', 'true'); }
+  /* ---------- drawers / modal ---------- */
+  let openDrawerId = null;
+  function openDrawer(id) { byId(id).classList.add('show'); byId(id).setAttribute('aria-hidden', 'false'); byId('scrim').classList.add('show'); openDrawerId = id; }
+  function closeDrawer() { ['histDrawer', 'detDrawer'].forEach(d => { byId(d).classList.remove('show'); byId(d).setAttribute('aria-hidden', 'true'); }); byId('scrim').classList.remove('show'); openDrawerId = null; }
+  function openHistory() { renderDrawer(); openDrawer('histDrawer'); }
+  function openKeys() { byId('keysModal').classList.add('show'); }
+  function closeKeys() { byId('keysModal').classList.remove('show'); }
 
-  // ---- Presets ----
-  const presets = {
-    smoke:  { total: 10,   rps: 1,   concurrency: 2 },
-    load:   { total: 100,  rps: 10,  concurrency: 20 },
-    stress: { total: 500,  rps: 50,  concurrency: 50 },
-    spike:  { total: 1000, rps: 200, concurrency: 100 },
-  };
-  document.querySelectorAll('.preset').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.preset').forEach(p => p.classList.remove('active'));
-      el.classList.add('active');
-      const p = presets[el.dataset.preset];
-      $('total').value = p.total;
-      $('rps').value = p.rps;
-      $('concurrency').value = p.concurrency;
-      ['total', 'rps', 'concurrency'].forEach(id => localStorage.setItem('jmetter.' + id, $(id).value));
-    });
-  });
-
-  // ---- Tabs ----
-  document.querySelectorAll('.panel').forEach(panel => {
-    const tabs = panel.querySelectorAll(':scope > .panel-header .tabs .tab');
-    const bodies = panel.querySelectorAll(':scope > .panel-body > .tab-panel');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        bodies.forEach(b => b.classList.toggle('active', b.dataset.panel === tab.dataset.tab));
-        requestAnimationFrame(() => { resizeAll(); drawAllCharts(); });
-      });
-    });
-  });
-
-  // ---- Splitter ----
-  const splitter = $('splitter');
-  const bottom = document.querySelector('.bottom');
-  let dragging = false;
-  splitter.addEventListener('mousedown', e => {
-    dragging = true;
-    splitter.classList.add('drag');
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const rect = bottom.getBoundingClientRect();
-    const leftPx = Math.max(300, Math.min(rect.width - 300, e.clientX - rect.left));
-    const rightPx = rect.width - leftPx - 6;
-    bottom.style.gridTemplateColumns = `${leftPx}px 6px ${rightPx}px`;
-    localStorage.setItem('jmetter.split', leftPx);
-    requestAnimationFrame(() => { resizeAll(); drawAllCharts(); });
-  });
-  document.addEventListener('mouseup', () => {
-    if (!dragging) return;
-    dragging = false;
-    splitter.classList.remove('drag');
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  });
-
-  // ---- Copy as cURL ----
-  function copyAsCurl() {
+  /* ---------- cURL ---------- */
+  function copyCurl() {
     if (!validate()) { toast('Fix invalid fields first', 'err'); return; }
     const cfg = buildRequest();
-    const headerArgs = Object.entries(cfg.headers).map(([k, v]) => `  -H '${k}: ${String(v).replace(/'/g, "'\\''")}'`).join(' \\\n');
-    const dataArg = cfg.body ? ` \\\n  -d '${cfg.body.replace(/'/g, "'\\''")}'` : '';
-    const curl = `curl -X ${cfg.method} '${cfg.url}' \\\n${headerArgs}${dataArg}`;
-    navigator.clipboard.writeText(curl).then(
-      () => toast('cURL copied to clipboard', 'ok'),
-      () => toast('Failed to copy', 'err')
-    );
+    const hs = Object.entries(cfg.headers).map(([k, v]) => `  -H '${k}: ${String(v).replace(/'/g, "'\\''")}'`).join(' \\\n');
+    const data = cfg.body ? ` \\\n  -d '${cfg.body.replace(/'/g, "'\\''")}'` : '';
+    const curl = `curl -X ${cfg.method} '${cfg.url}' \\\n${hs}${data}`;
+    navigator.clipboard.writeText(curl).then(() => toast('cURL copied to clipboard', 'ok'), () => toast('Failed to copy', 'err'));
   }
 
-  // ---- Modal ----
-  function openModal() { $('shortcutsModal').classList.add('show'); }
-  function closeModal() { $('shortcutsModal').classList.remove('show'); }
-  $('shortcutsModal').querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeModal));
-  $('shortcutsBtn').addEventListener('click', openModal);
+  /* ---------- wiring ---------- */
+  $$('.pre[data-preset]').forEach(p => p.addEventListener('click', () => {
+    $$('.pre[data-preset]').forEach(x => x.classList.remove('on')); p.classList.add('on');
+    const v = PRESETS[p.dataset.preset];
+    byId('total').value = v.total; byId('rps').value = v.rps; byId('concurrency').value = v.concurrency;
+    ['total', 'rps', 'concurrency'].forEach(id => localStorage.setItem('jmetter.' + id, byId(id).value));
+  }));
+  $$('[data-tabhost]').forEach(host => host.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+    host.querySelectorAll('.tab').forEach(t => t.classList.remove('on')); tab.classList.add('on');
+    host.querySelectorAll('.vp').forEach(v => v.classList.toggle('on', v.dataset.v === tab.dataset.tab));
+    requestAnimationFrame(() => { resizeAll(); drawAll(); });
+  })));
+  byId('log').addEventListener('click', e => { const row = e.target.closest('.lg'); if (row) openDetail(row.dataset.rid); });
+  byId('respFilter').addEventListener('input', e => { filterText = e.target.value; applyFilter(); });
+  byId('startBtn').addEventListener('click', start);
+  byId('stopBtn').addEventListener('click', stop);
+  byId('testBtn').addEventListener('click', probe);
+  byId('copyCurlBtn').addEventListener('click', copyCurl);
+  byId('historyBtn').addEventListener('click', openHistory);
+  byId('shortcutsBtn').addEventListener('click', openKeys);
+  byId('histClose').addEventListener('click', closeDrawer);
+  byId('detClose').addEventListener('click', closeDrawer);
+  byId('scrim').addEventListener('click', closeDrawer);
+  byId('exitViewBtn').addEventListener('click', exitViewing);
+  byId('keysModal').addEventListener('click', e => { if (e.target === byId('keysModal') || e.target.hasAttribute('data-close-keys') || e.target.closest('[data-close-keys]')) closeKeys(); });
+  byId('jwt').addEventListener('input', renderJwt);
+  ['payload', 'headers', 'url'].forEach(id => byId(id).addEventListener('input', validate));
 
-  // ---- Drawer wiring ----
-  $('historyBtn').addEventListener('click', openDrawer);
-  $('drawerClose').addEventListener('click', closeDrawer);
-  $('backdrop').addEventListener('click', closeDrawer);
-  $('exitViewing').addEventListener('click', exitViewing);
-
-  // ---- Wire up controls ----
-  $('start').addEventListener('click', start);
-  $('stop').addEventListener('click', stop);
-  $('testOne').addEventListener('click', testOne);
-  $('copyCurl').addEventListener('click', copyAsCurl);
-  $('jwt').addEventListener('input', renderJwtInfo);
-  ['payload', 'headers', 'url'].forEach(id => $(id).addEventListener('input', validate));
-  $('logSearch').addEventListener('input', e => { logFilter = e.target.value; applyLogFilter(); });
-  $('globalSearch').addEventListener('input', e => {
-    logFilter = e.target.value;
-    $('logSearch').value = e.target.value;
-    // Switch to responses tab
-    document.querySelectorAll('.panel')[1].querySelector('[data-tab="responses"]').click();
-    applyLogFilter();
-  });
-
-  // ---- Keyboard shortcuts ----
   document.addEventListener('keydown', e => {
     const mod = isMac ? e.metaKey : e.ctrlKey;
-    const tag = (e.target.tagName || '').toLowerCase();
-    const inField = tag === 'input' || tag === 'textarea' || tag === 'select';
-
+    const tag = (e.target.tagName || '').toLowerCase(), inField = tag === 'input' || tag === 'textarea' || tag === 'select';
     if (e.key === 'Escape') {
-      if ($('shortcutsModal').classList.contains('show')) { closeModal(); e.preventDefault(); return; }
-      if ($('drawer').classList.contains('show')) { closeDrawer(); e.preventDefault(); return; }
-      if (running) { stop(); e.preventDefault(); return; }
-      if (viewingRun) { exitViewing(); e.preventDefault(); return; }
+      if (byId('keysModal').classList.contains('show')) { closeKeys(); return; }
+      if (openDrawerId) { closeDrawer(); return; }
+      if (running) { stop(); return; }
+      if (viewing) { exitViewing(); return; }
       if (inField) e.target.blur();
       return;
     }
     if (mod && e.key === 'Enter') { e.preventDefault(); start(); return; }
-    if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); $('globalSearch').focus(); $('globalSearch').select(); return; }
-    if (mod && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); setSidebar(!document.body.classList.contains('sidebar-collapsed')); return; }
-    if (mod && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); return; }
-    if (mod && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openDrawer(); return; }
-    if (mod && (e.key === 't' || e.key === 'T')) { e.preventDefault(); testOne(); return; }
-    if (e.key === '?' && !inField) { e.preventDefault(); openModal(); return; }
+    if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); byId('respFilter').focus(); byId('respFilter').select(); return; }
+    if (mod && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openHistory(); return; }
+    if (mod && (e.key === 't' || e.key === 'T')) { e.preventDefault(); probe(); return; }
+    if (e.key === '?' && !inField) { e.preventDefault(); openKeys(); }
   });
 
-  // ---- Persistence ----
+  /* ---------- persistence ---------- */
   for (const id of ['url', 'jwt', 'payload', 'headers', 'total', 'rps', 'concurrency', 'timeout', 'method']) {
-    const el = $(id);
-    const k = 'jmetter.' + id;
-    const v = localStorage.getItem(k);
+    const el = byId(id), k = 'jmetter.' + id, v = localStorage.getItem(k);
     if (v !== null) el.value = v;
     const save = () => localStorage.setItem(k, el.value);
-    el.addEventListener('input', save);
-    el.addEventListener('change', save);
+    el.addEventListener('input', save); el.addEventListener('change', save);
   }
 
-  // ---- Hover tooltip setup ----
-  setupHover(canvases.throughput, 'throughput', $('ctThroughput'), s => `
-    <div class="ct-time">t = ${s.t.toFixed(1)}s</div>
-    <div class="ct-row"><span class="k"><i class="sw" style="background:#818cf8"></i>RPS</span><span class="v">${s.rps.toFixed(1)}</span></div>
-    <div class="ct-row"><span class="k"><i class="sw" style="background:${getCSSVar('--warn')}"></i>Avg</span><span class="v">${Math.round(s.avgLatency)}ms</span></div>
-  `);
-  setupHover(canvases.latency, 'latency', $('ctLatency'), s => `
-    <div class="ct-time">t = ${s.t.toFixed(1)}s</div>
-    <div class="ct-row"><span class="k"><i class="sw" style="background:${getCSSVar('--info')}"></i>p50</span><span class="v">${s.p50}ms</span></div>
-    <div class="ct-row"><span class="k"><i class="sw" style="background:${getCSSVar('--warn')}"></i>p95</span><span class="v">${s.p95}ms</span></div>
-    <div class="ct-row"><span class="k"><i class="sw" style="background:${getCSSVar('--err')}"></i>p99</span><span class="v">${s.p99}ms</span></div>
-  `);
-
-  // ---- Init ----
-  window.addEventListener('resize', () => { resizeAll(); drawAllCharts(); });
-  new ResizeObserver(() => { resizeAll(); drawAllCharts(); }).observe(document.querySelector('.bottom'));
-  // Restore split
-  requestAnimationFrame(() => {
-    const savedSplit = parseInt(localStorage.getItem('jmetter.split'), 10);
-    if (savedSplit && savedSplit > 200) {
-      const rect = bottom.getBoundingClientRect();
-      const leftPx = Math.min(rect.width - 300, savedSplit);
-      const rightPx = rect.width - leftPx - 6;
-      bottom.style.gridTemplateColumns = `${leftPx}px 6px ${rightPx}px`;
-    }
-    resizeAll();
-    drawAllCharts();
-  });
-  renderKpis();
-  renderJwtInfo();
-  validate();
-  renderDrawer();
+  /* ---------- init ---------- */
+  window.addEventListener('resize', () => { resizeAll(); drawAll(); });
+  new ResizeObserver(() => { resizeAll(); drawAll(); }).observe(byId('cThr').closest('.low'));
+  requestAnimationFrame(() => { resizeAll(); drawAll(); });
+  renderJwt(); validate(); render(true); renderDrawer();
 })();
 </script>
 </body>
